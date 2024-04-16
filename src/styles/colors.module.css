@@ -1,0 +1,64 @@
+@value testerRed: #e31021;
+@value testerLightGreen: #669d31;
+@value testerSkyBlue: #57b8ff;
+@value testerBrown: #c69c72;
+@value testerBlue: #015fa5;
+@value testerGrey: #646464;
+@value testerPink: #ff88dc;
+@value testerOrange: #f58a07;
+@value testerPurple: #576fff;
+
+:global(.tester-bg-red) {
+  background-color: testerRed;
+}
+:global(.tester-text-red) {
+  color: testerRed;
+}
+:global(.tester-bg-lightgreen) {
+  background-color: testerLightGreen;
+}
+:global(.tester-text-lightgreen) {
+  color: testerLightGreen;
+}
+:global(.tester-bg-skyblue) {
+  background-color: testerSkyBlue;
+}
+:global(.tester-text-skyblue) {
+  color: testerSkyBlue;
+}
+:global(.tester-bg-brown) {
+  background-color: testerBrown;
+}
+:global(.tester-text-brown) {
+  color: testerBrown;
+}
+:global(.tester-bg-blue) {
+  background-color: testerBlue;
+}
+:global(.tester-text-blue) {
+  color: testerBlue;
+}
+:global(.tester-bg-grey) {
+  background-color: testerGrey;
+}
+:global(.tester-text-grey) {
+  color: testerGrey;
+}
+:global(.tester-bg-pink) {
+  background-color: testerPink;
+}
+:global(.tester-text-pink) {
+  color: testerPink;
+}
+:global(.tester-bg-orange) {
+  background-color: testerOrange;
+}
+:global(.tester-text-orange) {
+  color: testerOrange;
+}
+:global(.tester-bg-purple) {
+  background-color: testerPurple;
+}
+:global(.tester-text-purple) {
+  color: testerPurple;
+}
