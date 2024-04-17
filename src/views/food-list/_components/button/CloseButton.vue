@@ -1,6 +1,5 @@
-<!-- CloseButton.vue -->
 <template>
-    <div class="close-icon" @click="emitClose">
+    <div class="close-icon" @click="emitClose($event)">
         &#10005;
     </div>
 </template>
@@ -8,7 +7,8 @@
 <script setup lang="ts">
 const emit = defineEmits(['close']);
 
-function emitClose() {
+function emitClose(event: { stopPropagation: () => void; }) {
+    event.stopPropagation();
     emit('close');
 }
 </script>

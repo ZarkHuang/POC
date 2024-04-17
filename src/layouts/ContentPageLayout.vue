@@ -2,28 +2,22 @@
 
 <template>
   <NLayout position="absolute">
-    <NLayoutHeader bordered style="height: var(--header-height)">
+    <NLayoutHeader bordered style="height: 60px">
       <AppHeader />
     </NLayoutHeader>
 
     <NLayoutContent
       position="absolute"
-      :style="`top: var(--header-height); bottom: var(--footer-height); padding: 16px;`"
-      content-style="height: calc(100vh - var(--header-height) - var(--footer-height));"
+      style="top: 60px; bottom: 36px"
+      content-style="padding: 16px;"
     >
       <RouterView />
     </NLayoutContent>
 
-    <NLayoutFooter position="absolute" style="height: var(--footer-height)">
+    <NLayoutFooter position="absolute" style="height: 36px">
       <AppFooter />
     </NLayoutFooter>
   </NLayout>
 </template>
 
-<style module lang="scss">
-
-:root {
-    --header-height: 60px;
-    --footer-height: 36px;
-}
-</style>
+<style module lang="scss"></style>
