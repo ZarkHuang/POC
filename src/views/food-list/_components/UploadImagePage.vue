@@ -1,17 +1,18 @@
 <template>
     <div class="wrap">
-        <FileUploadButton :fileName="fileName" @file-selected="handleFileSelected" />
-        <ImagePreview :file="selectedFile" @update:file="handleFileSelected" @reset="handleReset" />
+        <!-- <FileUploadButton :fileName="fileName" @file-selected="handleFileSelected" /> -->
+        <ImagePreview :file="selectedFile" @update:file="handleFileSelected" @reset="handleReset" @selection-saved="handleSelectionSaved" />
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import FileUploadButton from '@/views/food-list/_components/FileUploadButton.vue';
+// import FileUploadButton from '@/views/food-list/_components/FileUploadButton.vue';
 import ImagePreview from '@/views/food-list/_components/ImagePreview.vue';
 
 const selectedFile = ref<File | null>(null);
 const fileName = ref('未選擇文件...');
+const emit = defineEmits(['selection-saved']);
 
 function handleFileSelected(file: File | undefined) {
     if (file) { 
@@ -26,6 +27,10 @@ function handleFileSelected(file: File | undefined) {
 function handleReset() {
     selectedFile.value = null;
     fileName.value = '未選擇名稱...';
+}
+
+function handleSelectionSaved(selectionData: any) {
+    emit('selection-saved', selectionData);
 }
 </script>
 

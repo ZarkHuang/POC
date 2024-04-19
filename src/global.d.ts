@@ -15,3 +15,12 @@ type TesterType = {
   cook: string
   kcal: string | number
 }
+
+export interface SelectionData {
+  corners: {
+      origTL: { x: number, y: number },
+      origTR: { x: number, y: number },
+      origBL: { x: number, y: number },
+      origBR: { x: number, y: number }
+  };
+}
