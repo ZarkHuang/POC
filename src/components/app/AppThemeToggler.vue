@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Sun, Moon } from '@vicons/carbon'
 import { APP_THEME_KEY } from '@/utils/config'
+import { AppThemeProviderType } from '@/global';
 
 const { isDarkTheme, toggleDarkTheme } = inject(
   APP_THEME_KEY,
@@ -8,10 +9,10 @@ const { isDarkTheme, toggleDarkTheme } = inject(
 </script>
 
 <template>
-  <n-button @click="toggleDarkTheme">
-    <n-icon v-if="isDarkTheme" :component="Moon" />
-    <n-icon v-else :component="Sun" />
-  </n-button>
+  <NButton @click="toggleDarkTheme">
+    <NIcon v-if="isDarkTheme" :component="Moon" />
+    <NIcon v-else :component="Sun" />
+  </NButton>
 </template>
 
 <style module lang="scss"></style>

@@ -26,7 +26,7 @@ watch(
     },
 )
 
-function fileChanged(event) {
+function fileChanged(event: { target: { files: any[]; }; }) {
     const file = event.target.files[0]
     if (file) {
         if (/^image\/(jpeg|png|gif)$/.test(file.type)) {

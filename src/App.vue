@@ -38,7 +38,6 @@ onMounted(() => {
         <component :is="route.meta.layout || 'div'">
           <RouterView />
         </component>
-        <AppMessageConfig />
       </NDialogProvider>
     </NMessageProvider>
   </NConfigProvider>

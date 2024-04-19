@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { mockData } from '@/utils/config/mock-data'
+import { TesterType } from '@/global'
 
 export const useTesterStore = defineStore('tester', () => {
   const testerList = ref<Array<TesterType>>(mockData.testerList)

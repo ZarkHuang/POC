@@ -30,10 +30,12 @@ const imageUploaded = ref(false);
 const fileInput: Ref<HTMLInputElement | null> = ref(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
 const img = ref<fabric.Image | null>(null);
-const emit = defineEmits(['selection-saved']);
-let selectionRect: fabric.Rect | null = null; // 將類型聲明為 fabric.Rect | null
+const emit = defineEmits(['selection-saved', 'selection-removed']);
 
+let selectionRect: fabric.Rect | null = null;
 let fabricCanvas: fabric.Canvas | null = null;
+let idCounter = 1;
+
 const isDrawing = ref(false);
 const selections = reactive<SelectionData[]>([]); //儲存所有數據
 const corners = reactive({
@@ -42,6 +44,68 @@ const corners = reactive({
     origBL: { x: 0, y: 0 },
     origBR: { x: 0, y: 0 }
 });
+
+function addSelectionWithButton(rect: fabric.Rect, canvas: fabric.Canvas) {
+    const btnRadius = 12;
+    const btnOffset = btnRadius / 2;
+
+    const label = new fabric.Text(`#${rect.id.split('-')[1]}`, {
+        left: rect.left + 5,
+        top: rect.top + 5,
+        fontSize: 14,
+        fill: 'white',
+        backgroundColor: 'black',
+        selectable: false,
+        hasControls: false,
+    });
+
+    
+    const closeButton = new fabric.Circle({
+        radius: btnRadius,
+        fill: 'white',
+        stroke: 'white',
+        strokeWidth: 5,
+        left: (rect.left ?? 0) + (rect.width ?? 0) - btnRadius - btnOffset + 10,
+        top: (rect.top ?? 0) - btnRadius - btnOffset - 5,
+        originX: 'center',
+        originY: 'center',
+        selectable: false,
+        hasControls: false,
+        evented: true,
+    });
+
+    const closeText = new fabric.Text('x', {
+        fontFamily: 'Arial',
+        fontSize: 14,
+        left: closeButton.left,
+        top: closeButton.top,
+        originX: 'center',
+        originY: 'center',
+        selectable: false,
+        hasControls: false,
+        evented: true,
+        fill: 'black',
+    });
+
+    closeButton.on('mousedown', function () {
+        console.log('Removing selection with ID:', rect.id);  
+        emit('selection-removed', { id: rect.id }); 
+        canvas.remove(rect);
+        canvas.remove(label);
+        canvas.remove(closeButton);
+        canvas.remove(closeText);
+        canvas.renderAll();
+    });
+
+    closeText.on('mousedown', function () {
+        closeButton.fire('mousedown');
+    });
+
+    canvas.add(label);
+    canvas.add(closeButton);
+    canvas.add(closeText);
+    canvas.renderAll();
+}
 
 //生成隨機顏色
 function getRandomColor() {
@@ -52,30 +116,21 @@ function getRandomColor() {
     return color;
 }
 
-
-
 const showSaveButton = ref(false);
 const buttonStyle = reactive({ position: 'absolute', left: '0px', top: '0px' });
 
 function saveSelection() {
+    const id = `rect-${idCounter}`; 
+    selectionRect.id = id;
     const newSelection = {
-        corners: JSON.parse(JSON.stringify(corners)) // 深拷貝以確保保存當前狀態
+        id: id,
+        corners: JSON.parse(JSON.stringify(corners))
     };
     selections.push(newSelection);
-    console.log('保存的框選數據:', selections.map(s => ({
-        corners: {
-            origTL: s.corners.origTL,
-            origTR: s.corners.origTR,
-            origBL: s.corners.origBL,
-            origBR: s.corners.origBR
-        }
-    })));
-    emit('selection-saved', newSelection);
+    emit('selection-saved', newSelection);  // Emit the selection along with its ID
     showSaveButton.value = false;
-    selectionRect = null;
+    selectionRect = null; 
 }
-
-
 
 
 function triggerFileInput() {
@@ -130,36 +185,37 @@ function initializeCanvas(imageUrl: string) {
 
     fabric.Image.fromURL(imageUrl, (loadedImg) => {
         if (fabricCanvas) {
-        console.log('Image loaded:', loadedImg);
-        const scale = Math.min(
+            console.log('Image loaded:', loadedImg);
+            const scale = Math.min(
                 (fabricCanvas.width ?? 0) / (loadedImg.width ?? 0),
-                (fabricCanvas.height ?? 0) / (loadedImg.height ?? 0) 
+                (fabricCanvas.height ?? 0) / (loadedImg.height ?? 0)
             );
 
-        loadedImg.scale(scale).set({
-            left: fabricCanvas?.width ?? 0  / 2,
-            top: fabricCanvas?.height ?? 0 / 2,
-            originX: 'center',
-            originY: 'center',
-            selectable: false,
-            evented: true
-        });
+            loadedImg.scale(scale).set({
+                left: fabricCanvas?.width ?? 0 / 2,
+                top: fabricCanvas?.height ?? 0 / 2,
+                originX: 'center',
+                originY: 'center',
+                selectable: false,
+                evented: true
+            });
 
-        fabricCanvas.clear();
-        fabricCanvas.add(loadedImg);
-        fabricCanvas.centerObject(loadedImg);
-        fabricCanvas.renderAll();
+            fabricCanvas.clear();
+            fabricCanvas.add(loadedImg);
+            fabricCanvas.centerObject(loadedImg);
+            fabricCanvas.renderAll();
 
-        //設定圖的邊界
-        imgBounds = {
-            left: (loadedImg.left ?? 0) - (loadedImg.width ?? 0) * (loadedImg.scaleX ?? 0) / 2,
-            top: (loadedImg.top ?? 0) - (loadedImg.height ?? 0) * (loadedImg.scaleY  ?? 0) / 2,
-            right: (loadedImg.left ?? 0) + (loadedImg.width ?? 0) * (loadedImg.scaleX ?? 0) / 2,
-            bottom: (loadedImg.top ?? 0) + (loadedImg.height ?? 0) * (loadedImg.scaleY  ?? 0) / 2
-        };
-        img.value = loadedImg;
-        initDrawingAndSelection();
-    }}, {
+            //設定圖的邊界
+            imgBounds = {
+                left: (loadedImg.left ?? 0) - (loadedImg.width ?? 0) * (loadedImg.scaleX ?? 0) / 2,
+                top: (loadedImg.top ?? 0) - (loadedImg.height ?? 0) * (loadedImg.scaleY ?? 0) / 2,
+                right: (loadedImg.left ?? 0) + (loadedImg.width ?? 0) * (loadedImg.scaleX ?? 0) / 2,
+                bottom: (loadedImg.top ?? 0) + (loadedImg.height ?? 0) * (loadedImg.scaleY ?? 0) / 2
+            };
+            img.value = loadedImg;
+            initDrawingAndSelection();
+        }
+    }, {
         crossOrigin: 'anonymous'
     });
 }
@@ -184,6 +240,7 @@ function initDrawingAndSelection() {
 
         if (pointer.x >= imgBounds.left && pointer.x <= imgBounds.right &&
             pointer.y >= imgBounds.top && pointer.y <= imgBounds.bottom) {
+            const rectId = `rect-${idCounter++}`;
             const color = getRandomColor();
             isDrawing.value = true;
             origX = pointer.x;
@@ -200,6 +257,7 @@ function initDrawingAndSelection() {
                 strokeWidth: 4,
                 selectable: false,
                 evented: false,
+                id: rectId
             });
             fabricCanvas!.add(selectionRect);
         }
@@ -231,6 +289,8 @@ function initDrawingAndSelection() {
             buttonStyle.top = `${buttonY}px`;
             showSaveButton.value = true;
 
+            addSelectionWithButton(selectionRect, fabricCanvas);
+
             // 計算寬選四個角落的xy距離
             let scaleX = img.value.scaleX ?? 0;
             let scaleY = img.value.scaleY ?? 0;
@@ -242,8 +302,10 @@ function initDrawingAndSelection() {
             corners.origBL.y = corners.origTL.y + ((selectionRect.height ?? 0) / scaleY);
             corners.origBR.x = corners.origTL.x + ((selectionRect.width ?? 0) / scaleX);
             corners.origBR.y = corners.origTL.y + ((selectionRect.height ?? 0) / scaleY);
+        } else {
+            fabricCanvas!.remove(selectionRect);
+            selectionRect = null;
         }
-
         isDrawing.value = false;  // 結束繪畫狀態
     });
 }

@@ -1,16 +1,20 @@
+
+
+
 <template>
   <NSpace vertical>
     <NGrid cols="2" x-gap="12">
       <NGi :span="1">
-        <UploadImage @selection-saved="addFormWithData" />
+        <UploadImage @selection-saved="addFormWithData" @selection-removed="handleSelectionRemoved" />
       </NGi>
       <NGi :span="1">
         <div class="form-header">
           <PageTitle>辨識結果</PageTitle>
           <NButton @click="addForm">新增表單</NButton>
         </div>
-        <NScrollbar style="max-height: calc(100vh - 160px);">
-          <div v-for="(form, index) in forms" :key="index" class="form-content">
+        <NScrollbar style="max-height: calc(100vh - 158px);">
+          <div v-for="(form, index) in forms" :key="form.id" class="form-content">
+            <div class="form-title">Form #{{ index + 1 }}</div>
             <NForm ref="formRef" :model="form.data" inline>
               <NGrid cols="9" x-gap="8" y-gap="8">
                 <NGi v-for="item in formItems.slice(0, 9)" :key="`first-${item.path}`">
@@ -25,16 +29,17 @@
                 </NGi>
               </NGrid>
             </NForm>
-            <div style="display: flex; justify-content: end; ">
-                <NButton type="primary" @click="submitForm(form)" style="margin:0 10px">提交</NButton>
-                <NButton @click="toggleEdit(form)">{{ form.editable ? '確定' : '編輯' }}</NButton>
-              </div>
+            <div style="display: flex; justify-content: end;">
+              <NButton type="primary" @click="submitForm(form)">提交</NButton>
+              <NButton @click="toggleEdit(form)">{{ form.editable ? '確定' : '編輯' }}</NButton>
+            </div>
           </div>
         </NScrollbar>
       </NGi>
     </NGrid>
   </NSpace>
 </template>
+
 
 
 <script setup lang="ts">
@@ -47,11 +52,14 @@ interface FormData {
 }
 
 interface FormInstance {
+  id: string; // 添加 id 属性
   data: FormData;
   editable: boolean;
 }
 
 const forms = reactive<FormInstance[]>([]);
+
+let idCounter = 0;
 
 const formItems = Array.from({ length: 18 }).map((_, i) => ({
   label: `食物 ${i + 1}`,
@@ -65,15 +73,27 @@ function createFormData(): FormData {
   }), {});
 }
 
-function addFormWithData(selectionData: any) {
-  forms.push({ data: createFormData(), editable: true });
+function addFormWithData(selectionData: { id: any; }) {
+    forms.push({
+        id: selectionData.id,
+        data: createFormData(),
+        editable: true
+    });
+}
+function handleSelectionRemoved(data) {
+    console.log('Received selection-removed event with ID:', data.id); 
+    const index = forms.findIndex(form => form.id === data.id);
+    if (index !== -1) {
+        console.log('Removing form with index:', index);  
+        forms.splice(index, 1);
+    }
 }
 
 function addForm() {
-  forms.push({ data: createFormData(), editable: true });
+  forms.push({ id: `form-${idCounter++}`, data: createFormData(), editable: true });
 }
 
-function submitForm() {
+function submitForm(_form: FormInstance) {
   console.log('提交表單:', forms.map(form => form.data));
   forms.forEach(form => form.editable = false);
 }
@@ -81,6 +101,7 @@ function submitForm() {
 function toggleEdit(form: FormInstance) {
   form.editable = !form.editable;
 }
+
 </script>
 
 
