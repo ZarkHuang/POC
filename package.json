@@ -16,6 +16,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@rollup/rollup-darwin-arm64": "^4.16.0",
     "@tanstack/vue-query": "^5.20.5",
     "@tanstack/vue-query-devtools": "^5.20.5",
     "@vueuse/core": "^10.7.1",

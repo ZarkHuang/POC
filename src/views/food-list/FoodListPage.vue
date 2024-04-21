@@ -80,7 +80,7 @@ function addFormWithData(selectionData: { id: any; }) {
         editable: true
     });
 }
-function handleSelectionRemoved(data) {
+function handleSelectionRemoved(data: { id: string; }) {
     console.log('Received selection-removed event with ID:', data.id); 
     const index = forms.findIndex(form => form.id === data.id);
     if (index !== -1) {
