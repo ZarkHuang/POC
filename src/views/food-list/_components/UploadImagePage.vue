@@ -1,8 +1,9 @@
 <template>
     <div class="wrap">
         <!-- <FileUploadButton :fileName="fileName" @file-selected="handleFileSelected" /> -->
-        <ImagePreview :file="selectedFile" @update:file="handleFileSelected" @reset="handleReset" @selection-saved="handleSelectionSaved" @selection-removed="handleSelectionRemoved" />
-    </div>
+        <ImagePreview :file="selectedFile" @update:file="handleFileSelected" @reset="handleReset"
+                  @selection-saved="handleSelectionSaved" @selection-removed="handleSelectionRemoved" />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -12,7 +13,7 @@ import ImagePreview from '@/views/food-list/_components/ImagePreview.vue';
 
 const selectedFile = ref<File | null>(null);
 const fileName = ref('未選擇文件...');
-const emit = defineEmits(['selection-saved','selection-removed']);
+const emit = defineEmits(['selection-saved','selection-removed']);  
 
 function handleFileSelected(file: File | undefined) {
     if (file) { 
@@ -34,11 +35,12 @@ function handleSelectionSaved(selectionData: any) {
     emit('selection-saved', selectionData);
 }
 
-function handleSelectionRemoved(selectionData: any) {
-    emit('selection-removed', selectionData);
+function handleSelectionRemoved(data) {
+  emit('selection-removed', data);
 }
-</script>
 
+
+</script>
 
 <style>
 .wrap {

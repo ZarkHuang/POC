@@ -1,6 +1,3 @@
-
-
-
 <template>
   <NSpace vertical>
     <NGrid cols="2" x-gap="12">
@@ -32,6 +29,7 @@
             <div style="display: flex; justify-content: end;">
               <NButton type="primary" @click="submitForm(form)">提交</NButton>
               <NButton @click="toggleEdit(form)">{{ form.editable ? '確定' : '編輯' }}</NButton>
+              <NButton type="error" @click="removeForm(form)">刪除</NButton>
             </div>
           </div>
         </NScrollbar>
@@ -66,7 +64,7 @@ const formItems = Array.from({ length: 18 }).map((_, i) => ({
   path: `name${i + 1}`
 }));
 
-function createFormData(): FormData {
+function createFormData(): FormData { 
   return formItems.reduce((acc, item) => ({
     ...acc,
     [item.path]: ''
@@ -74,17 +72,20 @@ function createFormData(): FormData {
 }
 
 function addFormWithData(selectionData: { id: any; }) {
+    console.log('Received selection-saved with ID:', selectionData.id); // 打印 ID
     forms.push({
         id: selectionData.id,
         data: createFormData(),
         editable: true
     });
 }
+
+
 function handleSelectionRemoved(data: { id: string; }) {
-    console.log('Received selection-removed event with ID:', data.id); 
+    console.log('Received selection-removed with ID:', data.id); // 打印 ID
     const index = forms.findIndex(form => form.id === data.id);
     if (index !== -1) {
-        console.log('Removing form with index:', index);  
+        console.log('Removing form with index:', index);
         forms.splice(index, 1);
     }
 }
@@ -102,6 +103,19 @@ function toggleEdit(form: FormInstance) {
   form.editable = !form.editable;
 }
 
+const emit = defineEmits(['selection-removed']);  
+function removeForm(form) {
+  const index = forms.findIndex(f => f.id === form.id);
+  if (index !== -1) {
+    forms.splice(index, 1);
+    emit('selection-removed', { id: form.id });
+  }
+}
+
+const removeSelection = (id) => {
+  emit('selection-removed', { id });
+};
+provide('removeSelection', removeSelection);
 </script>
 
 
