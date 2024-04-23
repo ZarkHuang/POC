@@ -100,12 +100,6 @@ function toggleEdit(form: FormInstance) {
   form.editable = !form.editable;
 }
 
-function removeForm(selectionId) {
-  const index = forms.findIndex(form => form.id === selectionId);
-  if (index !== -1) {
-    forms.splice(index, 1);
-  }
-}
 
 function removeForm(selectionId) {
   console.log('Attempting to remove form with ID:', selectionId);
