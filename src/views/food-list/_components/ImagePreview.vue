@@ -35,12 +35,9 @@ const imageUploaded = ref(false);
 const fileInput: Ref<HTMLInputElement | null> = ref(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
 const img = ref<fabric.Image | null>(null);
-const selectionConfirmed = ref(false);
-
-
 let selectionRect: fabric.Rect | null = null;
 let fabricCanvas: fabric.Canvas | null = null;
-let selectionLabels = new Map(); 
+let selectionLabels = new Map();
 
 
 const emit = defineEmits(['selection-saved', 'selection-removed']);
@@ -64,10 +61,10 @@ function cancelSelection() {
         fabricCanvas.remove(selectionRect);
         let label = selectionLabels.get(selectionRect);
         if (label) {
-            fabricCanvas.remove(label); 
+            fabricCanvas.remove(label);
         }
         fabricCanvas.renderAll();
-        selectionLabels.delete(selectionRect); 
+        selectionLabels.delete(selectionRect);
     }
     selectionRect = null;
     showSaveButton.value = false;
@@ -76,6 +73,7 @@ function cancelSelection() {
 const showSaveButton = ref(false);
 const buttonStyle = reactive({ position: 'absolute', left: '0px', top: '0px' });
 const currentFormId = ref('');
+
 function saveSelection() {
     const selectionIndex = selections.length + 1;  // 生成新的序號
     const uniqueId = `${Date.now()}-${selectionIndex}`;  // 生成包含時間戳和序號的唯一ID
@@ -92,8 +90,8 @@ function saveSelection() {
         index: s.index,  // 顯示序號
         corners: s.corners
     })));
-    selectionConfirmed.value = true;
     showSaveButton.value = false;
+    selectionRect = null;
 }
 
 function triggerFileInput() {
@@ -198,13 +196,14 @@ function initDrawingAndSelection() {
     fabricCanvas.on('mouse:down', function (options) {
         const pointer = fabricCanvas!.getPointer(options.e);
 
-        if (selectionRect && !selectionConfirmed.value) {
-            fabricCanvas!.remove(selectionRect);
-            fabricCanvas!.renderAll();
-            selectionRect = null;
-            showSaveButton.value = false;
-        }
-
+        // if (selectionRect) {
+        //     fabricCanvas.remove(selectionRect);
+        //     selectionRect = null;
+        // }
+        if (selectionRect && !(pointer.x >= selectionRect.left && pointer.x <= selectionRect.left + selectionRect.width &&
+        pointer.y >= selectionRect.top && pointer.y <= selectionRect.top + selectionRect.height)) {
+        cancelSelection();  // 調用取消框選
+    }
 
         if (pointer.x >= imgBounds.left && pointer.x <= imgBounds.right &&
             pointer.y >= imgBounds.top && pointer.y <= imgBounds.bottom) {
@@ -250,8 +249,8 @@ function initDrawingAndSelection() {
         const widthThreshold = 30;
         const heightThreshold = 30;
         if (selectionRect.width > widthThreshold && selectionRect.height > heightThreshold) {
-            const selectionIndex = selections.length + 1; 
-            
+            const selectionIndex = selections.length + 1;
+
             let label = new fabric.Text(`#${selectionIndex}`, {
                 left: selectionRect.left,
                 top: (selectionRect.top ?? 0) - 20,
@@ -281,8 +280,9 @@ function initDrawingAndSelection() {
             corners.origBR.x = corners.origTL.x + ((selectionRect.width ?? 0) / scaleX);
             corners.origBR.y = corners.origTL.y + ((selectionRect.height ?? 0) / scaleY);
         } else {
-            fabricCanvas!.remove(selectionRect);
+            fabricCanvas.remove(selectionRect);
             selectionRect = null;
+            // showSaveButton.value = false;
         }
         isDrawing.value = false;
     });

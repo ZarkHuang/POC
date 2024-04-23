@@ -2,7 +2,7 @@
   <NSpace vertical>
     <NGrid cols="2" x-gap="12">
       <NGi :span="1">
-        <UploadImage @selection-saved="addFormWithData" @selection-removed="handleSelectionRemoved" />
+        <ImagePreview @selection-saved="addFormWithData" @selection-removed="handleSelectionRemoved" />
       </NGi>
       <NGi :span="1">
         <div class="form-header">
@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 import { NForm, NFormItem, NInput, NButton, NGrid, NGi, NScrollbar } from 'naive-ui';
-import UploadImage from '@/views/food-list/_components/UploadImagePage.vue';
+import ImagePreview from '@/views/food-list/_components/ImagePreview.vue';
 
 interface FormData {
   [key: string]: string | null;
@@ -112,10 +112,6 @@ function removeForm(form) {
   }
 }
 
-const removeSelection = (id) => {
-  emit('selection-removed', { id });
-};
-provide('removeSelection', removeSelection);
 </script>
 
 
