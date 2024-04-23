@@ -14,6 +14,12 @@
             <NIcon :component="Close" />
         </NButton>
 
+        <NButton color="red" circle text-color="#fff" v-if="showCloseButton" @click="handleCloseButton"
+            :style="{ position: 'absolute', left: `${parseInt(buttonStyle.left, 10) + 50}px`, top: buttonStyle.top }">
+            <NIcon :component="Close" />
+        </NButton>
+
+
         <div v-if="!imageUploaded" class="upload-area">
             <NIcon :component="CloudUpload" class="upload-icon" />
             <div class="upload-text">上傳圖片</div>
@@ -29,7 +35,6 @@ import { CloudUpload, Checkmark, Close } from '@vicons/carbon';
 import CloseButton from '../_components/button/CloseButton.vue';
 import { SelectionData } from '@/global'
 
-
 const imageSrc = ref('');
 const imageUploaded = ref(false);
 const fileInput: Ref<HTMLInputElement | null> = ref(null);
@@ -40,7 +45,8 @@ let fabricCanvas: fabric.Canvas | null = null;
 let selectionLabels = new Map();
 
 
-const emit = defineEmits(['selection-saved', 'selection-removed']);
+const emit = defineEmits(['selection-saved', 'selection-removed', 'close-selection']);
+
 const isDrawing = ref(false);
 const selections = reactive<SelectionData[]>([])
 const corners = reactive({
@@ -49,6 +55,26 @@ const corners = reactive({
     origBL: { x: 0, y: 0 },
     origBR: { x: 0, y: 0 }
 });
+
+
+function handleCloseButton() {
+    if (selectionRect && selectionRect.id) {
+        emit('close-selection', selectionRect.id);
+        if (fabricCanvas && selectionRect) {
+            fabricCanvas.remove(selectionRect);
+            let label = selectionLabels.get(selectionRect);
+            if (label) {
+                fabricCanvas.remove(label);
+            }
+            fabricCanvas.renderAll();
+            selectionLabels.delete(selectionRect);
+        }
+        selectionRect = null;
+        showSaveButton.value = false;
+        showCloseButton.value = false
+    }
+}
+
 
 //生成隨機顏色
 function getRandomColor() {
@@ -71,28 +97,28 @@ function cancelSelection() {
 }
 
 const showSaveButton = ref(false);
+const showCloseButton = ref(false);
 const buttonStyle = reactive({ position: 'absolute', left: '0px', top: '0px' });
 const currentFormId = ref('');
 
 function saveSelection() {
-    const selectionIndex = selections.length + 1;  // 生成新的序號
-    const uniqueId = `${Date.now()}-${selectionIndex}`;  // 生成包含時間戳和序號的唯一ID
+    const selectionIndex = selections.length + 1;
+    const uniqueId = `${Date.now()}-${selectionIndex}`;
     currentFormId.value = uniqueId;
     const newSelection = {
         id: uniqueId,
-        index: selectionIndex,  // 保存序號
+        index: selectionIndex,
         corners: JSON.parse(JSON.stringify(corners))
     };
     selections.push(newSelection);
     emit('selection-saved', { id: uniqueId, data: newSelection });
-    console.log('保存的框選數據:', selections.map(s => ({
-        id: s.id,
-        index: s.index,  // 顯示序號
-        corners: s.corners
-    })));
+    if (selectionRect) {
+        selectionRect.id = uniqueId; // 确保框选对象有 ID
+    }
     showSaveButton.value = false;
-    selectionRect = null;
+    showCloseButton.value = true;
 }
+
 
 function triggerFileInput() {
     if (!imageUploaded.value && fileInput.value) {
@@ -196,13 +222,13 @@ function initDrawingAndSelection() {
     fabricCanvas.on('mouse:down', function (options) {
         const pointer = fabricCanvas!.getPointer(options.e);
 
-        // if (selectionRect) {
-        //     fabricCanvas.remove(selectionRect);
-        //     selectionRect = null;
-        // }
-        if (selectionRect && !(pointer.x >= selectionRect.left && pointer.x <= selectionRect.left + selectionRect.width &&
-        pointer.y >= selectionRect.top && pointer.y <= selectionRect.top + selectionRect.height)) {
-        cancelSelection();  // 調用取消框選
+        if (selectionRect && pointer.x >= selectionRect.left && pointer.x <= selectionRect.left + selectionRect.width &&
+            pointer.y >= selectionRect.top && pointer.y <= selectionRect.top + selectionRect.height) {
+            return;
+        }
+
+        if (selectionRect) {
+        return;
     }
 
         if (pointer.x >= imgBounds.left && pointer.x <= imgBounds.right &&
@@ -282,7 +308,7 @@ function initDrawingAndSelection() {
         } else {
             fabricCanvas.remove(selectionRect);
             selectionRect = null;
-            // showSaveButton.value = false;
+            showSaveButton.value = false;
         }
         isDrawing.value = false;
     });
