@@ -230,7 +230,7 @@ function initDrawingAndSelection() {
         if (selectionRect) {
         return;
     }
-
+    if (!showSaveButton.value && !showCloseButton.value) {
         if (pointer.x >= imgBounds.left && pointer.x <= imgBounds.right &&
             pointer.y >= imgBounds.top && pointer.y <= imgBounds.bottom) {
             const color = getRandomColor();
@@ -252,6 +252,7 @@ function initDrawingAndSelection() {
             });
             fabricCanvas!.add(selectionRect);
         }
+    }
     });
 
     fabricCanvas.on('mouse:move', function (options) {
