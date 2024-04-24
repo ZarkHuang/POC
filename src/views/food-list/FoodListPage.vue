@@ -20,7 +20,8 @@
           <div v-for="(form, index) in forms" :key="form.id" class="form-content">
             <NGrid cols="3" justify="end">
               <NGi>
-                <NH5 class="form-title">Image{{ form.labelIndex }}</NH5>
+                <NH5 class="form-title">{{ form.label || `Image${form.labelIndex}` }}</NH5>
+
               </NGi>
 
               <NGi :span="2">
@@ -108,14 +109,28 @@ function resetLabelIndex() {
 }
 
 function addFormWithData(selectionData) {
+  const store = useSelectionStore();
   console.log('Received selection-saved with ID:', selectionData.id);
   forms.push({
     id: selectionData.id,
     data: createFormData(),
     editable: true,
-    labelIndex: currentLabelIndex.value++
+    labelIndex: store.getNextLabelIndex()
   });
 }
+
+
+function addForm() {
+  const store = useSelectionStore();
+  forms.push({
+    id: `form-${idCounter++}`,
+    data: createFormData(),
+    editable: true,
+    label: `自定義${store.getNextCustomIndex()}`  // 使用自定義編號
+  });
+}
+
+
 
 function handleSelectionRemoved(data: { id: string; }) {
   console.log('Received selection-removed with ID:', data.id);
@@ -124,16 +139,6 @@ function handleSelectionRemoved(data: { id: string; }) {
     console.log('Removing form with index:', index);
     forms.splice(index, 1);
   }
-}
-
-function addForm() {
-  const store = useSelectionStore();
-  forms.push({
-    id: `form-${idCounter++}`,
-    data: createFormData(),
-    editable: true,
-    labelIndex: store.getNextLabelIndex()  // 從 store 獲取編號
-  });
 }
 
 function submitForm(_form: FormInstance) {
