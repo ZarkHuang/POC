@@ -1,22 +1,31 @@
-// stores/selectionStore.js
-import { defineStore } from 'pinia';
+// stores/selectionStore.ts
+import { defineStore } from 'pinia'
 
-// 在 Pinia store 中
 export const useSelectionStore = defineStore('selection', {
   state: () => ({
-    selections: []
+    selections: [],
+    nextLabelIndex: 1,
   }),
   actions: {
     addSelection(selection) {
-      this.selections.push(selection);
-      console.log(`Current selections after adding:`, this.selections);
+      this.selections.push(selection)
+      this.nextLabelIndex++ 
     },
-    removeSelection(id) {
-      const index = this.selections.findIndex(s => s.id === id);
+    getNextLabelIndex() {
+      return this.nextLabelIndex++;
+    },
+    removeSelection(id: string) {
+      const index = this.selections.findIndex((s) => s.id === id)
       if (index !== -1) {
-        this.selections.splice(index, 1);
+        this.selections.splice(index, 1)
       }
-    }
-  }
-});
-
+      if (this.selections.length === 0) {
+        this.resetLabelIndex()
+      }
+    },
+    resetLabelIndex() {
+      this.nextLabelIndex = 1
+      console.log(`Reset nextLabelIndex to 1`)
+    },
+  },
+})

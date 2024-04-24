@@ -28,6 +28,7 @@ import { fabric } from 'fabric';
 import { CloudUpload, Checkmark, Close } from '@vicons/carbon';
 import CloseButton from '../_components/button/CloseButton.vue';
 import { SelectionData } from '@/global'
+import { useSelectionStore } from '@/stores/selectionStore';
 
 const imageSrc = ref('');
 const imageUploaded = ref(false);
@@ -46,7 +47,9 @@ defineExpose({
 
 //透過父組件Form刪除框選狀態以及Label
 function removeSelectionById(id: string) {
+    const store = useSelectionStore(); // 確保在函數內部使用 store
     if (!fabricCanvas) return;
+
     const objects = fabricCanvas.getObjects();
     objects.forEach(obj => {
         if (obj.id === id) {
@@ -63,7 +66,10 @@ function removeSelectionById(id: string) {
         console.log("Label not found for ID:", id);
     }
     fabricCanvas.renderAll();
+
+    store.removeSelection(id); // 更新 Pinia store，刪除對應的框選
 }
+
 
 const isDrawing = ref(false);
 const selections = reactive<SelectionData[]>([])
@@ -100,16 +106,19 @@ const buttonStyle = reactive({ position: 'absolute', left: '0px', top: '0px' });
 const currentFormId = ref('');
 
 function saveSelection() {
-    const selectionIndex = selections.length + 1;
+    const store = useSelectionStore();
+    const selectionIndex = store.nextLabelIndex; 
     const uniqueId = `${Date.now()}-${selectionIndex}`;
     currentFormId.value = uniqueId;
     const newSelection = {
         id: uniqueId,
-        index: selectionIndex,
+        index: store.nextLabelIndex,
         corners: JSON.parse(JSON.stringify(corners))
     };
+
     selections.push(newSelection);
-    emit('selection-saved', { id: uniqueId, data: newSelection , labelIndex: selectionIndex });
+    emit('selection-saved', { id: uniqueId, data: newSelection, labelIndex: selectionIndex });
+    store.addSelection(newSelection);
     if (selectionRect) {
         selectionRect.id = uniqueId;
         let label = new fabric.Text(`#${selectionIndex}`, {
