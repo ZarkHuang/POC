@@ -14,12 +14,6 @@
             <NIcon :component="Close" />
         </NButton>
 
-        <NButton color="red" circle text-color="#fff" v-if="showCloseButton" @click="handleCloseButton"
-            :style="{ position: 'absolute', left: `${parseInt(buttonStyle.left, 10) + 50}px`, top: buttonStyle.top }">
-            <NIcon :component="Close" />
-        </NButton>
-
-
         <div v-if="!imageUploaded" class="upload-area">
             <NIcon :component="CloudUpload" class="upload-icon" />
             <div class="upload-text">上傳圖片</div>
@@ -46,6 +40,30 @@ let selectionLabels = new Map();
 
 
 const emit = defineEmits(['selection-saved', 'selection-removed', 'close-selection']);
+defineExpose({
+    removeSelectionById
+});
+
+//透過父組件Form刪除框選狀態以及Label
+function removeSelectionById(id: string) {
+    if (!fabricCanvas) return;
+    const objects = fabricCanvas.getObjects();
+    objects.forEach(obj => {
+        if (obj.id === id) {
+            console.log("Removing object with ID:", obj.id);
+            fabricCanvas.remove(obj);
+        }
+    });
+
+    const label = selectionLabels.get(id);
+    if (label) {
+        fabricCanvas.remove(label);
+        selectionLabels.delete(id);
+    } else {
+        console.log("Label not found for ID:", id);
+    }
+    fabricCanvas.renderAll();
+}
 
 const isDrawing = ref(false);
 const selections = reactive<SelectionData[]>([])
@@ -55,26 +73,6 @@ const corners = reactive({
     origBL: { x: 0, y: 0 },
     origBR: { x: 0, y: 0 }
 });
-
-
-function handleCloseButton() {
-    if (selectionRect && selectionRect.id) {
-        emit('close-selection', selectionRect.id);
-        if (fabricCanvas && selectionRect) {
-            fabricCanvas.remove(selectionRect);
-            let label = selectionLabels.get(selectionRect);
-            if (label) {
-                fabricCanvas.remove(label);
-            }
-            fabricCanvas.renderAll();
-            selectionLabels.delete(selectionRect);
-        }
-        selectionRect = null;
-        showSaveButton.value = false;
-        showCloseButton.value = false
-    }
-}
-
 
 //生成隨機顏色
 function getRandomColor() {
@@ -111,9 +109,19 @@ function saveSelection() {
         corners: JSON.parse(JSON.stringify(corners))
     };
     selections.push(newSelection);
-    emit('selection-saved', { id: uniqueId, data: newSelection });
+    emit('selection-saved', { id: uniqueId, data: newSelection , labelIndex: selectionIndex });
     if (selectionRect) {
-        selectionRect.id = uniqueId; // 确保框选对象有 ID
+        selectionRect.id = uniqueId;
+        let label = new fabric.Text(`#${selectionIndex}`, {
+            left: selectionRect.left,
+            top: selectionRect.top - 20,
+            fontSize: 14,
+            fill: 'white',
+            selectable: false,
+        });
+        label.set('id', uniqueId);
+        fabricCanvas.add(label);
+        selectionLabels.set(uniqueId, label);
     }
     showSaveButton.value = false;
     showCloseButton.value = true;
@@ -222,15 +230,20 @@ function initDrawingAndSelection() {
     fabricCanvas.on('mouse:down', function (options) {
         const pointer = fabricCanvas!.getPointer(options.e);
 
-        if (selectionRect && pointer.x >= selectionRect.left && pointer.x <= selectionRect.left + selectionRect.width &&
-            pointer.y >= selectionRect.top && pointer.y <= selectionRect.top + selectionRect.height) {
-            return;
+        if (selectionRect && showSaveButton.value) {
+            if (fabricCanvas && selectionRect) {
+                fabricCanvas.remove(selectionRect);
+                let label = selectionLabels.get(selectionRect);
+                if (label) {
+                    fabricCanvas.remove(label);
+                }
+            }
+            fabricCanvas!.remove(selectionRect);
+            fabricCanvas!.renderAll();
+            selectionRect = null;
+            showSaveButton.value = false;
         }
 
-        if (selectionRect) {
-        return;
-    }
-    if (!showSaveButton.value && !showCloseButton.value) {
         if (pointer.x >= imgBounds.left && pointer.x <= imgBounds.right &&
             pointer.y >= imgBounds.top && pointer.y <= imgBounds.bottom) {
             const color = getRandomColor();
@@ -252,7 +265,6 @@ function initDrawingAndSelection() {
             });
             fabricCanvas!.add(selectionRect);
         }
-    }
     });
 
     fabricCanvas.on('mouse:move', function (options) {
@@ -272,22 +284,6 @@ function initDrawingAndSelection() {
 
     fabricCanvas.on('mouse:up', function () {
         if (!selectionRect || !img.value) return;
-
-        const widthThreshold = 30;
-        const heightThreshold = 30;
-        if (selectionRect.width > widthThreshold && selectionRect.height > heightThreshold) {
-            const selectionIndex = selections.length + 1;
-
-            let label = new fabric.Text(`#${selectionIndex}`, {
-                left: selectionRect.left,
-                top: (selectionRect.top ?? 0) - 20,
-                fontSize: 14,
-                fill: 'white',
-                selectable: false,
-            });
-            fabricCanvas.add(label);
-            selectionLabels.set(selectionRect, label);
-        }
 
         if ((selectionRect.width ?? 0) > 30 && (selectionRect.height ?? 0) > 30) {
             let buttonX = (selectionRect.left ?? 0) + (selectionRect.width ?? 0) - 80;
@@ -309,13 +305,12 @@ function initDrawingAndSelection() {
         } else {
             fabricCanvas.remove(selectionRect);
             selectionRect = null;
-            showSaveButton.value = false;
+            // showSaveButton.value = false;
         }
         isDrawing.value = false;
     });
 
 }
-
 
 /*
  End Drawing Canvas
@@ -334,7 +329,6 @@ function resetUpload() {
 }
 
 </script>
-
 
 <style scoped>
 .image-container {
