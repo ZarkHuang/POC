@@ -3,7 +3,7 @@
     <NGrid cols="2" x-gap="12">
       <NGi :span="1">
         <ImagePreview ref="imagePreviewRef" @selection-saved="addFormWithData"
-              @selection-removed="handleSelectionRemoved" />
+          @selection-removed="handleSelectionRemoved" />
       </NGi>
       <NGi :span="1">
         <div class="form-header">
@@ -18,17 +18,21 @@
         </div>
         <NScrollbar style="max-height: calc(100vh - 158px);">
           <div v-for="(form, index) in forms" :key="form.id" class="form-content">
-            <NH5 class="form-title">Form #{{ form.labelIndex }}</NH5>
-            
-            <NForm ref="formRef" :model="form.data" inline>
-              <NGrid cols="2" x-gap="8" y-gap="8">
-                <NGi v-for="item in formItems.slice(0, 2)" :key="`first-${item.path}`">
-                  <NFormItem :label="item.label" :path="item.path">
-                  123
-                  </NFormItem>
-                </NGi>
-              </NGrid>
-            </NForm>
+            <NGrid cols="3" justify="end">
+              <NGi>
+                <NH5 class="form-title">編號{{ form.labelIndex }}</NH5>
+              </NGi>
+
+              <NGi :span="2">
+                <div style="display: flex; justify-content: flex-end; align-items: center;">
+                  <NH5 class="form-title" style="margin: 0px 16px;">名字：王大明</NH5>
+                  <NH5 class="form-title" style="margin: 0px;">時間：
+                    <NTime :time="Date.now()" type="date" />
+                  </NH5>
+                </div>
+              </NGi>
+            </NGrid>
+
 
             <NForm ref="formRef" :model="form.data" inline>
               <NGrid cols="9" x-gap="8" y-gap="8">
@@ -47,7 +51,7 @@
             <div style="display: flex; justify-content: end;">
               <NButton type="primary" @click="submitForm(form)">提交</NButton>
               <NButton @click="toggleEdit(form)">{{ form.editable ? '確定' : '編輯' }}</NButton>
-              <NButton type="error" @click="removeForm(form.id)">删除</NButton>
+              <NButton type="error" @click="removeForm(form.id)">刪除</NButton>
             </div>
           </div>
         </NScrollbar>
@@ -93,13 +97,13 @@ function createFormData(): FormData {
 }
 
 function addFormWithData(selectionData) {
-    console.log('Received selection-saved with ID:', selectionData.id);
-    forms.push({
-        id: selectionData.id,
-        data: createFormData(),
-        editable: true,
-        labelIndex: selectionData.labelIndex // 存儲 labelIndex
-    });
+  console.log('Received selection-saved with ID:', selectionData.id);
+  forms.push({
+    id: selectionData.id,
+    data: createFormData(),
+    editable: true,
+    labelIndex: selectionData.labelIndex // 存儲 labelIndex
+  });
 }
 
 function handleSelectionRemoved(data: { id: string; }) {
@@ -166,9 +170,11 @@ function removeForm(formId: string) {
 .item-content {
   display: flex;
   justify-content: space-between;
-  align-items: center; 
+  align-items: center;
 }
-.left-part, .right-part {
+
+.left-part,
+.right-part {
   flex: 1;
   padding: 5px;
 }
