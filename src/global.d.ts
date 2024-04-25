@@ -24,3 +24,24 @@ export interface SelectionData {
       origBR: { x: number, y: number }
   };
 }
+
+interface FormData {
+  [key: string]: string | null;
+}
+
+
+interface FormInstance {
+  id: string;
+  data: FormData;
+  editable: boolean;
+  label?: string;
+  labelIndex: number;
+  imageUrl: string;
+  isCustom: boolean;
+  canSubmit: boolean;
+}
+
+interface HistoryItem {
+  label: string;
+  data: { [key: string]: string | null };
+}
