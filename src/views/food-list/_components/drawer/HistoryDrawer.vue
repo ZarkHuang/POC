@@ -18,7 +18,7 @@
                     </div> -->
                 </div>
                 <div @mouseover="hover = index" @mouseleave="hover = null" @click="confirmRemoveForm(entry.id)">
-                    <NIcon :component="hover === index ? Close : CheckmarkFilled" class="history-checkmark"/>
+                    <NIcon :component="hover === index ? Misuse : CheckmarkFilled" class="history-checkmark"/>
                 </div>
             </div>
         </div>
@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import { ref, watch, defineProps, defineEmits } from 'vue';
 import { NDrawer, NIcon } from 'naive-ui';
-import { CheckmarkFilled, Close } from '@vicons/carbon';
+import { CheckmarkFilled, Misuse } from '@vicons/carbon';
 import { NoImage } from '@vicons/carbon';
 
 const props = defineProps({
@@ -93,6 +93,12 @@ function confirmRemoveForm(formId: string) {
     flex-shrink: 0;
     color: #4CAF50;
     font-size: 24px;
+    cursor: pointer;
+    transition: .3s ease-in-out
+}
+
+.history-checkmark:hover {
+    color: #d03050;
 }
 
 .history-image {

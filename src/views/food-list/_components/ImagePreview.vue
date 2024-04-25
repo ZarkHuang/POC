@@ -47,7 +47,7 @@ defineExpose({
 
 //透過父組件Form刪除框選狀態以及Label
 function removeSelectionById(id: string) {
-    const store = useSelectionStore(); // 確保在函數內部使用 store
+    const store = useSelectionStore();
     if (!fabricCanvas) return;
 
     const objects = fabricCanvas.getObjects();
@@ -66,8 +66,7 @@ function removeSelectionById(id: string) {
         console.log("Label not found for ID:", id);
     }
     fabricCanvas.renderAll();
-
-    store.removeSelection(id); // 更新 Pinia store，刪除對應的框選
+    store.removeSelection(id);
 }
 
 
@@ -103,256 +102,274 @@ function cancelSelection() {
 const showSaveButton = ref(false);
 const showCloseButton = ref(false);
 const buttonStyle = reactive({ position: 'absolute', left: '0px', top: '0px' });
-const currentFormId = ref('');
+// const currentFormId = ref('');
+
 
 function saveSelection() {
     const store = useSelectionStore();
     const selectionIndex = store.nextLabelIndex;
     const uniqueId = `${Date.now()}-${selectionIndex}`;
-    currentFormId.value = uniqueId;
     const newSelection = {
         id: uniqueId,
         index: store.nextLabelIndex,
         corners: JSON.parse(JSON.stringify(corners))
     };
 
+    // 設定透明度以隱藏框選矩形進行截圖
+    const originalOpacity = selectionRect.opacity;
+    selectionRect.set({ opacity: 0 });
 
-        const originalOpacity = selectionRect.opacity;
-        selectionRect.set({ opacity: 0 });
-        fabricCanvas.renderAll();
+    // 截取框選範圍內的圖片
+    const croppedImgUrl = fabricCanvas.toDataURL({
+        format: 'png',
+        left: selectionRect.left,
+        top: selectionRect.top,
+        width: selectionRect.width,
+        height: selectionRect.height
+    });
 
+    // 還原框選矩形的透明度
+    selectionRect.set({ opacity: originalOpacity });
+    fabricCanvas.renderAll();
 
-        const croppedImgUrl = fabricCanvas.toDataURL({
-            format: 'png',
-            left: selectionRect.left,
-            top: selectionRect.top,
-            width: selectionRect.width,
-            height: selectionRect.height
-        });
+    // 轉換 corners 物件的值為字串
+    const cornersString = formatCorners(newSelection.corners);
 
-        selectionRect.set({ opacity: originalOpacity });
-        fabricCanvas.renderAll();
-    
     selections.push(newSelection);
-        emit('selection-saved', { id: uniqueId, data: newSelection, labelIndex: selectionIndex, imageUrl: croppedImgUrl, });
+    emit('selection-saved', {
+        id: uniqueId,
+        data: newSelection,
+        labelIndex: selectionIndex,
+        imageUrl: croppedImgUrl,
+        corners: cornersString
+    });
     store.addSelection(newSelection);
-        if(selectionRect) {
-            selectionRect.id = uniqueId;
-            let label = new fabric.Text(`#${selectionIndex}`, {
-                left: selectionRect.left,
-                top: selectionRect.top - 20,
-                fontSize: 14,
-                fill: 'white',
-                selectable: false,
-            });
-            label.set('id', uniqueId);
-            fabricCanvas.add(label);
-            selectionLabels.set(uniqueId, label);
-        }
-    showSaveButton.value = false;
-        showCloseButton.value = true;
+
+    if (selectionRect) {
+        selectionRect.id = uniqueId;
+        let label = new fabric.Text(`#${selectionIndex}`, {
+            left: selectionRect.left,
+            top: selectionRect.top - 20,
+            fontSize: 14,
+            fill: 'white',
+            selectable: false,
+        });
+        label.set('id', uniqueId);
+        fabricCanvas.add(label);
+        selectionLabels.set(uniqueId, label);
     }
+    showSaveButton.value = false;
+    showCloseButton.value = true;
+}
+
+function formatCorners(corners) {
+    const values = Object.values(corners);
+    console.log(values)
+    return values.map(point => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(' | ');
+}
+
 
 
 function triggerFileInput() {
-            if (!imageUploaded.value && fileInput.value) {
-                fileInput.value.click();
-            }
-        }
+    if (!imageUploaded.value && fileInput.value) {
+        fileInput.value.click();
+    }
+}
 function internalFileChanged(event: Event) {
-            const file = (event.target as HTMLInputElement).files?.[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    if (e.target) {
-                        imageSrc.value = e.target.result as string;
-                        imageUploaded.value = true;
-                        initializeCanvas(imageSrc.value);
-                    }
-                };
-                reader.readAsDataURL(file);
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (e.target) {
+                imageSrc.value = e.target.result as string;
+                imageUploaded.value = true;
+                initializeCanvas(imageSrc.value);
             }
-        }
+        };
+        reader.readAsDataURL(file);
+    }
+}
 
 
 onMounted(async () => {
-            await nextTick();
-            if (canvas.value) {
-                const rect = canvas.value.parentElement!.getBoundingClientRect();
-                canvas.value.width = rect.width;
-                canvas.value.height = rect.height;
+    await nextTick();
+    if (canvas.value) {
+        const rect = canvas.value.parentElement!.getBoundingClientRect();
+        canvas.value.width = rect.width;
+        canvas.value.height = rect.height;
 
-                fabricCanvas = new fabric.Canvas(canvas.value, {
-                    selection: true,
-                    hoverCursor: 'pointer',
-                    moveCursor: 'grab'
-                });
-                console.log('Canvas is ready with size:', rect.width, 'x', rect.height);
-
-            } else {
-                console.log('Canvas is not available');
-            }
+        fabricCanvas = new fabric.Canvas(canvas.value, {
+            selection: true,
+            hoverCursor: 'pointer',
+            moveCursor: 'grab'
         });
+        console.log('Canvas is ready with size:', rect.width, 'x', rect.height);
 
-    /*
-     Start Drawing Canvas
-    */
-    let imgBounds = { left: 0, top: 0, right: 0, bottom: 0 };
-    function initializeCanvas(imageUrl: string) {
-        // console.log('Initializing canvas with image URL:', imageUrl);
-        if (!fabricCanvas) {
-            console.error("fabricCanvas is not initialized.");
-            return;
-        }
+    } else {
+        console.log('Canvas is not available');
+    }
+});
 
-        fabric.Image.fromURL(imageUrl, (loadedImg) => {
-            if (fabricCanvas) {
-                console.log('Image loaded:', loadedImg);
-                const scale = Math.min(
-                    (fabricCanvas.width ?? 0) / (loadedImg.width ?? 0),
-                    (fabricCanvas.height ?? 0) / (loadedImg.height ?? 0),
-                    (fabricCanvas.height ?? 0) / (loadedImg.height ?? 0)
-                );
-
-                loadedImg.scale(scale).set({
-                    left: fabricCanvas?.width ?? 0 / 2,
-                    top: fabricCanvas?.height ?? 0 / 2,
-                    originX: 'center',
-                    originY: 'center',
-                    selectable: false,
-                    evented: true
-                });
-
-                fabricCanvas.clear();
-                fabricCanvas.add(loadedImg);
-                fabricCanvas.centerObject(loadedImg);
-                fabricCanvas.renderAll();
-
-                //設定圖的邊界
-                imgBounds = {
-                    left: (loadedImg.left ?? 0) - (loadedImg.width ?? 0) * (loadedImg.scaleX ?? 0) / 2,
-                    top: (loadedImg.top ?? 0) - (loadedImg.height ?? 0) * (loadedImg.scaleY ?? 0) / 2,
-                    right: (loadedImg.left ?? 0) + (loadedImg.width ?? 0) * (loadedImg.scaleX ?? 0) / 2,
-                    bottom: (loadedImg.top ?? 0) + (loadedImg.height ?? 0) * (loadedImg.scaleY ?? 0) / 2
-                };
-                img.value = loadedImg;
-                console.log("Image added to canvas, now initializing drawing and selection tools.");
-                initDrawingAndSelection();
-            }
-        }, {
-            crossOrigin: 'anonymous'
-        });
+/*
+ Start Drawing Canvas
+*/
+let imgBounds = { left: 0, top: 0, right: 0, bottom: 0 };
+function initializeCanvas(imageUrl: string) {
+    // console.log('Initializing canvas with image URL:', imageUrl);
+    if (!fabricCanvas) {
+        console.error("fabricCanvas is not initialized.");
+        return;
     }
 
-    function initDrawingAndSelection() {
-        console.log("Initializing drawing and selection on fabricCanvas.");
-        if (!fabricCanvas) {
-            console.error("Cannot initialize drawing and selection - fabricCanvas is not defined.");
-            return;
-        }
-
-        let origX = 0, origY = 0;
-
-        fabricCanvas.on('mouse:down', function (options) {
-            const pointer = fabricCanvas!.getPointer(options.e);
-
-            if (selectionRect && showSaveButton.value) {
-                if (fabricCanvas && selectionRect) {
-                    fabricCanvas.remove(selectionRect);
-                    let label = selectionLabels.get(selectionRect);
-                    if (label) {
-                        fabricCanvas.remove(label);
-                    }
-                }
-                fabricCanvas!.remove(selectionRect);
-                fabricCanvas!.renderAll();
-                selectionRect = null;
-                showSaveButton.value = false;
-            }
-
-            if (pointer.x >= imgBounds.left && pointer.x <= imgBounds.right &&
-                pointer.y >= imgBounds.top && pointer.y <= imgBounds.bottom) {
-                const color = getRandomColor();
-                isDrawing.value = true;
-                origX = pointer.x;
-                origY = pointer.y;
-                selectionRect = new fabric.Rect({
-                    left: origX,
-                    top: origY,
-                    originX: 'left',
-                    originY: 'top',
-                    width: 0,
-                    height: 0,
-                    fill: color + '80',
-                    stroke: color,
-                    strokeWidth: 4,
-                    selectable: false,
-                    evented: false,
-                });
-                fabricCanvas!.add(selectionRect);
-            }
-        });
-
-        fabricCanvas.on('mouse:move', function (options) {
-            if (!isDrawing.value || !selectionRect) return;
-            const pointer = fabricCanvas!.getPointer(options.e);
-            if (pointer.x >= imgBounds.left && pointer.x <= imgBounds.right &&
-                pointer.y >= imgBounds.top && pointer.y <= imgBounds.bottom) {
-                selectionRect.set({
-                    left: Math.min(pointer.x, origX),
-                    top: Math.min(pointer.y, origY),
-                    width: Math.abs(origX - pointer.x),
-                    height: Math.abs(origY - pointer.y)
-                });
-                fabricCanvas!.renderAll();
-            }
-        });
-
-        fabricCanvas.on('mouse:up', function () {
-            if (!selectionRect || !img.value) return;
-
-            if ((selectionRect.width ?? 0) > 30 && (selectionRect.height ?? 0) > 30) {
-                let buttonX = (selectionRect.left ?? 0) + (selectionRect.width ?? 0) - 80;
-                let buttonY = (selectionRect.top ?? 0) + (selectionRect.height ?? 0) + 10;
-                buttonStyle.left = `${buttonX}px`;
-                buttonStyle.top = `${buttonY}px`;
-                showSaveButton.value = true;
-
-                let scaleX = img.value.scaleX ?? 0;
-                let scaleY = img.value.scaleY ?? 0;
-                corners.origTL.x = ((selectionRect.left ?? 0) - (img.value.left ?? 0)) / scaleX + (img.value.width ?? 0) * 0.5;
-                corners.origTL.y = ((selectionRect.top ?? 0) - (img.value.top ?? 0)) / scaleY + (img.value.height ?? 0) * 0.5;
-                corners.origTR.x = corners.origTL.x + ((selectionRect.width ?? 0) / scaleX);
-                corners.origTR.y = corners.origTL.y;
-                corners.origBL.x = corners.origTL.x;
-                corners.origBL.y = corners.origTL.y + ((selectionRect.height ?? 0) / scaleY);
-                corners.origBR.x = corners.origTL.x + ((selectionRect.width ?? 0) / scaleX);
-                corners.origBR.y = corners.origTL.y + ((selectionRect.height ?? 0) / scaleY);
-            } else {
-                fabricCanvas.remove(selectionRect);
-                selectionRect = null;
-                // showSaveButton.value = false;
-            }
-            isDrawing.value = false;
-        });
-
-    }
-
-    /*
-     End Drawing Canvas
-    */
-
-    function resetUpload() {
-        console.log('Resetting upload...');
-        imageSrc.value = '';
-        imageUploaded.value = false;
+    fabric.Image.fromURL(imageUrl, (loadedImg) => {
+        // 原始圖片的長寬
+        console.log('Original image dimensions:', loadedImg.width, 'x', loadedImg.height);
         if (fabricCanvas) {
+            console.log('Image loaded:', loadedImg);
+            const scale = Math.min(
+                (fabricCanvas.width ?? 0) / (loadedImg.width ?? 0),
+                (fabricCanvas.height ?? 0) / (loadedImg.height ?? 0),
+                (fabricCanvas.height ?? 0) / (loadedImg.height ?? 0)
+            );
+
+            loadedImg.scale(scale).set({
+                left: fabricCanvas?.width ?? 0 / 2,
+                top: fabricCanvas?.height ?? 0 / 2,
+                originX: 'center',
+                originY: 'center',
+                selectable: false,
+                evented: true
+            });
+
             fabricCanvas.clear();
+            fabricCanvas.add(loadedImg);
+            fabricCanvas.centerObject(loadedImg);
+            fabricCanvas.renderAll();
+
+            //設定圖的邊界
+            imgBounds = {
+                left: (loadedImg.left ?? 0) - (loadedImg.width ?? 0) * (loadedImg.scaleX ?? 0) / 2,
+                top: (loadedImg.top ?? 0) - (loadedImg.height ?? 0) * (loadedImg.scaleY ?? 0) / 2,
+                right: (loadedImg.left ?? 0) + (loadedImg.width ?? 0) * (loadedImg.scaleX ?? 0) / 2,
+                bottom: (loadedImg.top ?? 0) + (loadedImg.height ?? 0) * (loadedImg.scaleY ?? 0) / 2
+            };
+            img.value = loadedImg;
+            // console.log("Image added to canvas, now initializing drawing and selection tools.");
+            initDrawingAndSelection();
         }
-        if (fileInput.value) {
-            fileInput.value.value = '';
-        }
+    }, {
+        crossOrigin: 'anonymous'
+    });
+}
+
+function initDrawingAndSelection() {
+    // console.log("Initializing drawing and selection on fabricCanvas.");
+    if (!fabricCanvas) {
+        console.error("Cannot initialize drawing and selection - fabricCanvas is not defined.");
+        return;
     }
+
+    let origX = 0, origY = 0;
+
+    fabricCanvas.on('mouse:down', function (options) {
+        const pointer = fabricCanvas!.getPointer(options.e);
+
+        if (selectionRect && showSaveButton.value) {
+            if (fabricCanvas && selectionRect) {
+                fabricCanvas.remove(selectionRect);
+                let label = selectionLabels.get(selectionRect);
+                if (label) {
+                    fabricCanvas.remove(label);
+                }
+            }
+            fabricCanvas!.remove(selectionRect);
+            fabricCanvas!.renderAll();
+            selectionRect = null;
+            showSaveButton.value = false;
+        }
+
+        if (pointer.x >= imgBounds.left && pointer.x <= imgBounds.right &&
+            pointer.y >= imgBounds.top && pointer.y <= imgBounds.bottom) {
+            const color = getRandomColor();
+            isDrawing.value = true;
+            origX = pointer.x;
+            origY = pointer.y;
+            selectionRect = new fabric.Rect({
+                left: origX,
+                top: origY,
+                originX: 'left',
+                originY: 'top',
+                width: 0,
+                height: 0,
+                fill: color + '80',
+                stroke: color,
+                strokeWidth: 4,
+                selectable: false,
+                evented: false,
+            });
+            fabricCanvas!.add(selectionRect);
+        }
+    });
+
+    fabricCanvas.on('mouse:move', function (options) {
+        if (!isDrawing.value || !selectionRect) return;
+        const pointer = fabricCanvas!.getPointer(options.e);
+        if (pointer.x >= imgBounds.left && pointer.x <= imgBounds.right &&
+            pointer.y >= imgBounds.top && pointer.y <= imgBounds.bottom) {
+            selectionRect.set({
+                left: Math.min(pointer.x, origX),
+                top: Math.min(pointer.y, origY),
+                width: Math.abs(origX - pointer.x),
+                height: Math.abs(origY - pointer.y)
+            });
+            fabricCanvas!.renderAll();
+        }
+    });
+
+    fabricCanvas.on('mouse:up', function () {
+        if (!selectionRect || !img.value) return;
+
+        if ((selectionRect.width ?? 0) > 30 && (selectionRect.height ?? 0) > 30) {
+            let buttonX = (selectionRect.left ?? 0) + (selectionRect.width ?? 0) - 80;
+            let buttonY = (selectionRect.top ?? 0) + (selectionRect.height ?? 0) + 10;
+            buttonStyle.left = `${buttonX}px`;
+            buttonStyle.top = `${buttonY}px`;
+            showSaveButton.value = true;
+
+            let scaleX = img.value.scaleX ?? 0;
+            let scaleY = img.value.scaleY ?? 0;
+            corners.origTL.x = ((selectionRect.left ?? 0) - (img.value.left ?? 0)) / scaleX + (img.value.width ?? 0) * 0.5;
+            corners.origTL.y = ((selectionRect.top ?? 0) - (img.value.top ?? 0)) / scaleY + (img.value.height ?? 0) * 0.5;
+            corners.origTR.x = corners.origTL.x + ((selectionRect.width ?? 0) / scaleX);
+            corners.origTR.y = corners.origTL.y;
+            corners.origBL.x = corners.origTL.x;
+            corners.origBL.y = corners.origTL.y + ((selectionRect.height ?? 0) / scaleY);
+            corners.origBR.x = corners.origTL.x + ((selectionRect.width ?? 0) / scaleX);
+            corners.origBR.y = corners.origTL.y + ((selectionRect.height ?? 0) / scaleY);
+        } else {
+            fabricCanvas.remove(selectionRect);
+            selectionRect = null;
+        }
+        isDrawing.value = false;
+    });
+
+}
+
+/*
+ End Drawing Canvas
+*/
+
+function resetUpload() {
+    console.log('Resetting upload...');
+    imageSrc.value = '';
+    imageUploaded.value = false;
+    if (fabricCanvas) {
+        fabricCanvas.clear();
+    }
+    if (fileInput.value) {
+        fileInput.value.value = '';
+    }
+}
 
 </script>
 

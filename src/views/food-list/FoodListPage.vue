@@ -1,5 +1,6 @@
 <template>
   <NSpace vertical>
+  
     <NGrid cols="3" x-gap="12">
       <NGi :span="1">
         <ImagePreview ref="imagePreviewRef" @selection-saved="addFormWithData"
@@ -36,15 +37,14 @@
                 </div>
               </NGi>
             </NGrid>
-            <NForm ref="formRef" :model="form.data" inline>
-              <NGrid cols="9" x-gap="8" y-gap="8">
-                <NGi v-for="item in formItems.slice(0, 9)" :key="`first-${item.path}`">
-                  <NFormItem :label="item.label" :path="item.path">
-                    <NInput :disabled="!form.editable" v-model:value="form.data[item.path]" />
-                  </NFormItem>
-                </NGi>
-              </NGrid>
-            </NForm>
+            <NForm ref="formRef" :model="form.data" class="form-row">
+  <div v-for="item in formItems" :key="item.path" class="form-item">
+    <label class="form-label">{{ item.label }}</label>
+    <NInput class="form-input" :disabled="!form.editable" v-model:value="form.data[item.path]" />
+  </div>
+</NForm>
+
+
             <div style="display: flex; justify-content: end;">
               <NButton @click="confirmSubmit(form)" :disabled="!form.canSubmit" style='margin-right:10px'>提交</NButton>
               <NButton type="error" @click="confirmRemoveForm(form.id)">删除</NButton>
@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
 import { reactive } from 'vue';
-import { NForm, NFormItem, NInput, NButton, NGrid, NGi, NScrollbar } from 'naive-ui';
+import { NForm, NInput, NButton, NGrid, NGi, NScrollbar } from 'naive-ui';
 import ImagePreview from '@/views/food-list/_components/ImagePreview.vue';
 import HistoryDrawer from '@/views/food-list/_components/drawer/HistoryDrawer.vue';
 import EditButton from '@/views/food-list/_components/button/EditButton.vue';
@@ -152,7 +152,7 @@ function confirmSubmit(form: FormInstance) {
 
 const showModal = ref(false);
 function submitForm(form: FormInstance) {
-  console.log('提交表单:', form.data);
+  console.log('提交:', form.data);
   form.editable = false;
   form.canSubmit = false;
 
@@ -285,4 +285,29 @@ function handleRemoveForm(formId) {
   margin-right: 10px;
   border-radius: 8px
 }
+
+.form-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom:16px;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 120px;
+  margin-right: 12px;
+}
+
+.form-label {
+  height: 100px; 
+  margin-bottom: 4px;
+
+  display: flex;
+  align-items: center;
+}
+
 </style>
