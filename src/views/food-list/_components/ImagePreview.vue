@@ -147,6 +147,7 @@ function saveSelection() {
   // 設定透明度以隱藏框選矩形進行截圖
   const originalOpacity = selectionRect.opacity
   selectionRect.set({ opacity: 0 })
+
   // 截取框選範圍內的圖片
   const croppedImgUrl = fabricCanvas.toDataURL({
     format: 'png',
@@ -177,36 +178,20 @@ function saveSelection() {
     corners: cornersString,
   })
   store.addSelection(newSelection)
-  const top = selectionRect.top || 0
-  const left = selectionRect.left || 0
-  if (selectionRect) {
-    // Create text with black color
-    let label = new fabric.Text(`#${selectionIndex}`, {
-      fontSize: 14,
-      fill: 'black', // Black text color
-      selectable: false,
-    })
-    fabricCanvas.add(label)
-    label.set({
-      left: left + 5,
-      top: top - 25,
-    })
 
-    // Create a background rectangle based on text width
-    let bgRect = new fabric.Rect({
-      left: (label.left ?? 0) - 5, // Slight padding around text
-      top: (label.top ?? 0) - 5,
-      fill: '#ffffff', // White background
-      width: (label.width ?? 0) + 10, // Slightly wider than text
-      height: (label.height ?? 0) + 10, // Slightly taller than text
-      rx: 10, // Round corners
-      ry: 10,
-      shadow: '2px 2px 5px rgba(0,0,0,0.2)',
+  if (selectionRect) {
+    selectionRect.id = uniqueId
+    let label = new fabric.Text(`#${selectionIndex}`, {
+      left: selectionRect.left,
+      top: (selectionRect.top ?? 0) - 20,
+      fontSize: 14,
+      fill: 'black',
+      backgroundColor: 'white',
       selectable: false,
     })
-    fabricCanvas.add(bgRect)
-    fabricCanvas.bringToFront(label) // Make sure text is on top
-    selectionLabels.set(uniqueId, { bgRect, label })
+    label.set('data', { id: uniqueId })
+    fabricCanvas.add(label)
+    selectionLabels.set(uniqueId, label)
   }
   showSaveButton.value = false
   showCloseButton.value = true
