@@ -292,7 +292,6 @@ function initializeCanvas(imageUrl: string) {
           originX: 'center',
           originY: 'center',
           selectable: false,
-          evented: true,
         })
 
         fabricCanvas.clear()
@@ -376,7 +375,6 @@ function initDrawingAndSelection() {
         stroke: color,
         strokeWidth: 4,
         selectable: false,
-        evented: false,
       })
       fabricCanvas!.add(selectionRect)
     }
