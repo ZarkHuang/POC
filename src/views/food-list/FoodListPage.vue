@@ -43,7 +43,7 @@
                     class="form-image-thumbnail"
                   />
                   <NH5 class="form-title">{{
-                    form.label || `Image${form.labelIndex}`
+                    form.label || `#${form.labelIndex}`
                   }}</NH5>
                 </div>
               </NGi>

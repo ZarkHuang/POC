@@ -147,7 +147,6 @@ function saveSelection() {
   // 設定透明度以隱藏框選矩形進行截圖
   const originalOpacity = selectionRect.opacity
   selectionRect.set({ opacity: 0 })
-
   // 截取框選範圍內的圖片
   const croppedImgUrl = fabricCanvas.toDataURL({
     format: 'png',
@@ -180,17 +179,33 @@ function saveSelection() {
   store.addSelection(newSelection)
 
   if (selectionRect) {
-    selectionRect.id = uniqueId
-    let label = new fabric.Text(`Image${selectionIndex}`, {
-      left: selectionRect.left,
-      top: (selectionRect.top ?? 0) - 20,
+    // Create text with black color
+    let label = new fabric.Text(`#${selectionIndex}`, {
       fontSize: 14,
-      fill: 'white',
+      fill: 'black', // Black text color
       selectable: false,
     })
-    label.set('data', { id: uniqueId })
     fabricCanvas.add(label)
-    selectionLabels.set(uniqueId, label)
+    label.set({
+      left: selectionRect.left + 5,
+      top: selectionRect.top - 25,
+    })
+
+    // Create a background rectangle based on text width
+    let bgRect = new fabric.Rect({
+      left: label.left - 5, // Slight padding around text
+      top: label.top - 5,
+      fill: '#ffffff', // White background
+      width: label.width + 10, // Slightly wider than text
+      height: label.height + 10, // Slightly taller than text
+      rx: 10, // Round corners
+      ry: 10,
+      shadow: '2px 2px 5px rgba(0,0,0,0.2)',
+      selectable: false,
+    })
+    fabricCanvas.add(bgRect)
+    fabricCanvas.bringToFront(label) // Make sure text is on top
+    selectionLabels.set(uniqueId, { bgRect, label })
   }
   showSaveButton.value = false
   showCloseButton.value = true
@@ -242,8 +257,8 @@ onMounted(async () => {
 })
 
 /*
- Start Drawing Canvas
-*/
+   Start Drawing Canvas
+  */
 let imgBounds = { left: 0, top: 0, right: 0, bottom: 0 }
 function initializeCanvas(imageUrl: string) {
   // console.log('Initializing canvas with image URL:', imageUrl);
@@ -418,8 +433,8 @@ function initDrawingAndSelection() {
 }
 
 /*
- End Drawing Canvas
-*/
+   End Drawing Canvas
+  */
 
 function resetUpload() {
   console.log('Resetting upload...')
@@ -476,9 +491,9 @@ canvas {
 }
 
 /* 
-.uploaded:before {
-    display: none;
-} */
+  .uploaded:before {
+      display: none;
+  } */
 
 /* upload area */
 .upload-icon {
