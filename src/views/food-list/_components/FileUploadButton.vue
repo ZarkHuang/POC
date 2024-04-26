@@ -26,17 +26,19 @@ watch(
     },
 )
 
-function fileChanged(event: { target: { files: any[]; }; }) {
-    const file = event.target.files[0]
+function fileChanged(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files ? input.files[0] : null;
+
     if (file) {
         if (/^image\/(jpeg|png|gif)$/.test(file.type)) {
-            localFileName.value = file.name
-            emits('file-selected', file)
+            localFileName.value = file.name;
+            emits('file-selected', file);
         } else {
-            message.error('上傳格式錯誤：只接受 JPEG, PNG, 或 GIF 格式的圖片文件。')
+            message.error('上傳格式錯誤：只接受 JPEG, PNG, 或 GIF 格式的圖片文件。');
         }
     } else {
-        localFileName.value = '未選擇文件...'
+        localFileName.value = '未選擇文件...';
     }
 }
 

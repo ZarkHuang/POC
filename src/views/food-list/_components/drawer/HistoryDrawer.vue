@@ -31,15 +31,17 @@ import { ref, watch, defineProps, defineEmits } from 'vue';
 import { NDrawer, NIcon } from 'naive-ui';
 import { CheckmarkFilled, Misuse } from '@vicons/carbon';
 import { NoImage } from '@vicons/carbon';
+import { HistoryItem } from '@/global'
 
-const props = defineProps({
-    modelValue: Boolean,
-    historyData: Array
-});
+interface DrawerProps {
+  modelValue: boolean;
+  historyData: HistoryItem[];
+}
 
+const props = defineProps<DrawerProps>();
 const drawerVisible = ref(props.modelValue);
 const emit = defineEmits(['update:modelValue', 'remove']);
-const hover = ref(null);
+const hover = ref<number | null>(null);
 
 watch(() => props.modelValue, (newVal) => {
     drawerVisible.value = newVal;

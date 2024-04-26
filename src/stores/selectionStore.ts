@@ -1,21 +1,22 @@
 // stores/selectionStore.ts
 import { defineStore } from 'pinia'
+import { SelectionData } from '@/global'
 
 export const useSelectionStore = defineStore('selection', {
   state: () => ({
-    selections: [],
+    selections: [] as SelectionData[] ,
     nextLabelIndex: 1,
     nextCustomIndex: 1,
   }),
   actions: {
-    addSelection(selection) {
+    addSelection(selection: SelectionData) {
       this.selections.push(selection);
     },
     getNextLabelIndex() {
-      return this.nextLabelIndex++;  // 获取当前索引的同时递增
+      return this.nextLabelIndex++;  
     },
     getNextCustomIndex() {
-      return this.nextCustomIndex++;  // 自定义表单索引递增
+      return this.nextCustomIndex++;
     },
     removeSelection(id: string) {
       const index = this.selections.findIndex((s) => s.id === id);

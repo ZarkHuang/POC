@@ -50,11 +50,11 @@ function removeSelectionById(id: string) {
     const store = useSelectionStore();
     if (!fabricCanvas) return;
 
-    const objects = fabricCanvas.getObjects();
+    const objects = fabricCanvas.getObjects() as (fabric.Object & { id?: string })[];
     objects.forEach(obj => {
         if (obj.id === id) {
             console.log("Removing object with ID:", obj.id);
-            fabricCanvas.remove(obj);
+            fabricCanvas!.remove(obj);
         }
     });
 
@@ -106,14 +106,14 @@ const buttonStyle = reactive({ position: 'absolute', left: '0px', top: '0px' });
 
 
 function saveSelection() {
+    if (!fabricCanvas || !selectionRect) {
+        console.error("Fabric canvas or selection rectangle is not initialized.");
+        return;
+    }
     const store = useSelectionStore();
     const selectionIndex = store.nextLabelIndex;
     const uniqueId = `${Date.now()}-${selectionIndex}`;
-    const newSelection = {
-        id: uniqueId,
-        index: store.nextLabelIndex,
-        corners: JSON.parse(JSON.stringify(corners))
-    };
+    const cornersObject = JSON.parse(JSON.stringify(corners));
 
     // 設定透明度以隱藏框選矩形進行截圖
     const originalOpacity = selectionRect.opacity;
@@ -133,7 +133,12 @@ function saveSelection() {
     fabricCanvas.renderAll();
 
     // 轉換 corners 物件的值為字串
-    const cornersString = formatCorners(newSelection.corners);
+    const cornersString = formatCorners(cornersObject);
+    const newSelection = {
+        id: uniqueId,
+        imageUrl: croppedImgUrl,
+        corners: cornersObject
+    };
 
     selections.push(newSelection);
     emit('selection-saved', {
@@ -147,14 +152,14 @@ function saveSelection() {
 
     if (selectionRect) {
         selectionRect.id = uniqueId;
-        let label = new fabric.Text(`#${selectionIndex}`, {
+        let label = new fabric.Text(`Image${selectionIndex}`, {
             left: selectionRect.left,
-            top: selectionRect.top - 20,
+            top: (selectionRect.top ?? 0) - 20,
             fontSize: 14,
             fill: 'white',
             selectable: false,
         });
-        label.set('id', uniqueId);
+        label.set('data', { id: uniqueId });
         fabricCanvas.add(label);
         selectionLabels.set(uniqueId, label);
     }
@@ -162,9 +167,8 @@ function saveSelection() {
     showCloseButton.value = true;
 }
 
-function formatCorners(corners) {
+function formatCorners(corners: SelectionData['corners']) {
     const values = Object.values(corners);
-    console.log(values)
     return values.map(point => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(' | ');
 }
 
@@ -347,7 +351,7 @@ function initDrawingAndSelection() {
             corners.origBR.x = corners.origTL.x + ((selectionRect.width ?? 0) / scaleX);
             corners.origBR.y = corners.origTL.y + ((selectionRect.height ?? 0) / scaleY);
         } else {
-            fabricCanvas.remove(selectionRect);
+            fabricCanvas!.remove(selectionRect);
             selectionRect = null;
         }
         isDrawing.value = false;

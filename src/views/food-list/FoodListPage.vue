@@ -1,6 +1,5 @@
 <template>
   <NSpace vertical>
-  
     <NGrid cols="3" x-gap="12">
       <NGi :span="1">
         <ImagePreview ref="imagePreviewRef" @selection-saved="addFormWithData"
@@ -38,12 +37,11 @@
               </NGi>
             </NGrid>
             <NForm ref="formRef" :model="form.data" class="form-row">
-  <div v-for="item in formItems" :key="item.path" class="form-item">
-    <label class="form-label">{{ item.label }}</label>
-    <NInput class="form-input" :disabled="!form.editable" v-model:value="form.data[item.path]" />
-  </div>
-</NForm>
-
+              <div v-for="item in formItems" :key="item.path" class="form-item">
+                <label class="form-label">{{ item.label }}</label>
+                <NInput class="form-input" :disabled="!form.editable" v-model:value="form.data[item.path]" />
+              </div>
+            </NForm>
 
             <div style="display: flex; justify-content: end;">
               <NButton @click="confirmSubmit(form)" :disabled="!form.canSubmit" style='margin-right:10px'>提交</NButton>
@@ -62,10 +60,11 @@ import { NForm, NInput, NButton, NGrid, NGi, NScrollbar } from 'naive-ui';
 import ImagePreview from '@/views/food-list/_components/ImagePreview.vue';
 import HistoryDrawer from '@/views/food-list/_components/drawer/HistoryDrawer.vue';
 import EditButton from '@/views/food-list/_components/button/EditButton.vue';
-import { FormData, FormInstance, HistoryItem } from '@/global'
+import { useSelectionStore } from '@/stores/selectionStore';
+import { FormData, FormInstance, HistoryItem, SelectionData } from '@/global'
 import { NoImage } from '@vicons/carbon';
 const imagePreviewRef = ref(null);
-import { useSelectionStore } from '@/stores/selectionStore';
+
 
 
 const history: Ref<HistoryItem[]> = ref([]);
@@ -93,15 +92,14 @@ function resetLabelIndex() {
   currentLabelIndex.value = 1;
 }
 
-function addFormWithData(selectionData: { id: any; }) {
-  const store = useSelectionStore();
+function addFormWithData(selectionData: SelectionData) {
   console.log('Received selection-saved with ID:', selectionData.id);
   forms.push({
     id: selectionData.id,
     imageUrl: selectionData.imageUrl,
     data: createFormData(),
     editable: true,
-    labelIndex: store.getNextLabelIndex(),
+    labelIndex: useSelectionStore().getNextLabelIndex(),
     isCustom: false,
     canSubmit: true
   });
@@ -185,7 +183,7 @@ function confirmRemoveForm(formId: string) {
     negativeText: '取消',
     onPositiveClick: () => {
       removeForm(formId);
-      dialog.destroyAll();
+      // dialog.destroyAll();
     }
   });
 }
@@ -208,9 +206,10 @@ function removeForm(formId: string) {
   }
 }
 
-
-// FoodListPage.vue 的 <script setup>
-function handleRemoveForm(formId) {
+function handleRemoveForm(formId: string) {
+  if (imagePreviewRef.value) {
+    (imagePreviewRef.value as any)?.removeSelectionById(formId);
+    }
   const formIndex = forms.findIndex(form => form.id === formId);
   if (formIndex !== -1) {
     forms.splice(formIndex, 1);
@@ -290,7 +289,7 @@ function handleRemoveForm(formId) {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom:16px;
+  margin-bottom: 16px;
 }
 
 .form-item {
@@ -303,11 +302,10 @@ function handleRemoveForm(formId) {
 }
 
 .form-label {
-  height: 100px; 
+  height: 100px;
   margin-bottom: 4px;
 
   display: flex;
   align-items: center;
 }
-
 </style>
