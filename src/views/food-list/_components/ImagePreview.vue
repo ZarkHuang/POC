@@ -186,8 +186,8 @@ function saveSelection() {
     // 創建文字標籤
     const labelText = `Image${selectionIndex}`
     const label = new fabric.Text(labelText, {
-      left: selectionRect.left + 5,
-      top: selectionRect.top - 20,
+      left: (selectionRect.left ?? 0) + 5,
+      top: (selectionRect.top ?? 0) - 20,
       fontSize: 12,
       fill: 'black',
       selectable: false,
