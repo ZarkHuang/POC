@@ -91,7 +91,8 @@ function removeSelectionById(id: string) {
 
   const label = selectionLabels.get(id)
   if (label) {
-    fabricCanvas.remove(label)
+    fabricCanvas.remove(label.circle) // 移除圓形背景
+    fabricCanvas.remove(label.label) // 移除標籤
     selectionLabels.delete(id)
   } else {
     console.log('Label not found for ID:', id)
@@ -181,17 +182,32 @@ function saveSelection() {
 
   if (selectionRect) {
     selectionRect.id = uniqueId
-    let label = new fabric.Text(`#${selectionIndex}`, {
-      left: selectionRect.left,
-      top: (selectionRect.top ?? 0) - 20,
-      fontSize: 14,
+
+    // 創建文字標籤
+    const labelText = `Image${selectionIndex}`
+    const label = new fabric.Text(labelText, {
+      left: selectionRect.left + 5,
+      top: selectionRect.top - 20,
+      fontSize: 12,
       fill: 'black',
-      backgroundColor: 'white',
       selectable: false,
     })
-    label.set('data', { id: uniqueId })
-    fabricCanvas.add(label)
-    selectionLabels.set(uniqueId, label)
+
+    const circle = new fabric.Rect({
+      left: (label.left ?? 0) - 5,
+      top: (label.top ?? 0) - 2,
+      fill: '#ffffff',
+      width: (label.width ?? 0) + 10,
+      height: (label.height ?? 0) + 5,
+      rx: 10, // Round corners
+      ry: 10,
+      shadow: '2px 2px 5px rgba(0,0,0,0.2)',
+      selectable: false,
+    })
+
+    fabricCanvas.add(circle, label)
+
+    selectionLabels.set(uniqueId, { circle, label })
   }
   showSaveButton.value = false
   showCloseButton.value = true
