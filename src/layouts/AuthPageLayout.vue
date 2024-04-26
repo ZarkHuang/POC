@@ -1,9 +1,9 @@
 <script setup lang="ts"></script>
 
 <template>
-  <n-layout position="absolute">
-    <router-view />
-  </n-layout>
+  <NLayout position="absolute">
+    <RouterView />
+  </NLayout>
 </template>
 
 <style module lang="scss"></style>

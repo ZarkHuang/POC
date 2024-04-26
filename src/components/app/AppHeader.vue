@@ -4,16 +4,16 @@ import brandLogoEFAI from '@/assets/efai-logo.svg'
 
 <template>
   <div :class="$style.headerContainer">
-    <n-space align="center">
-      <n-image :src="brandLogoEFAI" preview-disabled height="28" />
+    <NSpace align="center">
+      <NImage :src="brandLogoEFAI" preview-disabled height="28" />
       <!-- <div :class="$style.headerTitle">基因寶管理後台</div> -->
-    </n-space>
+    </NSpace>
 
-    <n-space>
-      <app-theme-toggler />
+    <NSpace>
+      <AppThemeToggler />
 
-      <app-logout-button />
-    </n-space>
+      <AppLogoutButton />
+    </NSpace>
   </div>
 </template>
 

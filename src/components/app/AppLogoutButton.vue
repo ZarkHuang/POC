@@ -12,14 +12,14 @@ function handleSignOutClick() {
 </script>
 
 <template>
-  <n-tooltip trigger="hover">
+  <NTooltip trigger="hover">
     <template #trigger>
-      <n-button type="error" secondary @click="handleSignOutClick">
-        <n-icon :component="Logout" />
-      </n-button>
+      <NButton type="error" secondary @click="handleSignOutClick">
+        <NIcon :component="Logout" />
+      </NButton>
     </template>
     登出
-  </n-tooltip>
+  </NTooltip>
 </template>
 
 <style module lang="scss"></style>

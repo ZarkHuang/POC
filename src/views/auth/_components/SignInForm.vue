@@ -67,25 +67,30 @@ function handleSignInClick(e: MouseEvent) {
 </script>
 
 <template>
-  <n-form ref="formRef" :model="formData" :rules="rules">
-    <n-form-item label="電子郵件" path="email">
-      <n-input v-model:value="formData.email" clearable autofocus />
-    </n-form-item>
+  <NForm ref="formRef" :model="formData" :rules="rules">
+    <NFormItem label="電子郵件" path="email">
+      <NInput v-model:value="formData.email" clearable autofocus />
+    </NFormItem>
 
-    <n-form-item label="密碼" path="password">
-      <n-input v-model:value="formData.password" type="password" show-password-on="mousedown" clearable />
-    </n-form-item>
+    <NFormItem label="密碼" path="password">
+      <NInput
+        v-model:value="formData.password"
+        type="password"
+        show-password-on="mousedown"
+        clearable
+      />
+    </NFormItem>
 
-    <n-form-item path="remember" :show-label="false" :show-feedback="false">
-      <n-checkbox>記住我</n-checkbox>
-    </n-form-item>
+    <NFormItem path="remember" :show-label="false" :show-feedback="false">
+      <NCheckbox>記住我</NCheckbox>
+    </NFormItem>
 
-    <n-form-item :show-feedback="false" :class="$style.signInButton">
-      <n-button type="primary" secondary block @click="handleSignInClick">
+    <NFormItem :show-feedback="false" :class="$style.signInButton">
+      <NButton type="primary" secondary block @click="handleSignInClick">
         登入
-      </n-button>
-    </n-form-item>
-  </n-form>
+      </NButton>
+    </NFormItem>
+  </NForm>
 </template>
 
 <style module lang="scss">

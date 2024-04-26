@@ -1,4 +1,4 @@
-import { TesterType } from "@/global"
+import { TesterType } from '@/global'
 
 export const mockData: {
   testerList: TesterType[]

@@ -32,7 +32,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <NConfigProvider :theme="theme" :theme-overrides="themeOverrides" :locale="zhTW" :date-locale="dateZhTW">
+  <NConfigProvider
+    :theme="theme"
+    :theme-overrides="themeOverrides"
+    :locale="zhTW"
+    :date-locale="dateZhTW"
+  >
     <NMessageProvider>
       <NDialogProvider>
         <component :is="route.meta.layout || 'div'">

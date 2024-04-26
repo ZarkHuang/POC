@@ -6,11 +6,11 @@ const currentYear = computed(() => {
 
 <template>
   <div :class="$style.appFooterContainer">
-    <n-text depth="3">
+    <NText depth="3">
       &copy; 2018-{{ currentYear }} EverFortune.AI Co., Ltd. All Rights Reserved
-    </n-text>
+    </NText>
 
-    <app-version :class="$style.appVersion" />
+    <AppVersion :class="$style.appVersion" />
   </div>
 </template>
 

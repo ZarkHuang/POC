@@ -4,24 +4,24 @@ import brandLogoEFAI from '@/assets/efai-logo.svg'
 </script>
 
 <template>
-  <n-layout embedded :class="$style.pageContainer">
+  <NLayout embedded :class="$style.pageContainer">
     <div :class="$style.appThemeToggler">
-      <app-theme-toggler />
+      <AppThemeToggler />
     </div>
 
-    <n-card size="large" content-style="width: 360px;">
+    <NCard size="large" content-style="width: 360px;">
       <template #header>
-        <n-space vertical justify="center" align="center">
-          <n-image :src="brandLogoEFAI" preview-disabled />
-          <n-h2> </n-h2>
-        </n-space>
+        <NSpace vertical justify="center" align="center">
+          <NImage :src="brandLogoEFAI" preview-disabled />
+          <NH2> </NH2>
+        </NSpace>
       </template>
 
-      <sign-in-form />
-    </n-card>
+      <SignInForm />
+    </NCard>
 
-    <app-version :class="$style.appVersion" />
-  </n-layout>
+    <AppVersion :class="$style.appVersion" />
+  </NLayout>
 </template>
 
 <style module lang="scss">
