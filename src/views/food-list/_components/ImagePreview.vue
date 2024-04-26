@@ -179,6 +179,7 @@ function saveSelection() {
     corners: cornersString,
   })
   store.addSelection(newSelection)
+  console.log(cornersString)
 
   if (selectionRect) {
     selectionRect.id = uniqueId
@@ -207,7 +208,6 @@ function saveSelection() {
     })
 
     fabricCanvas.add(circle, label)
-
     selectionLabels.set(uniqueId, { circle, label })
   }
   showSaveButton.value = false
