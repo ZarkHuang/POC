@@ -177,7 +177,8 @@ function saveSelection() {
     corners: cornersString,
   })
   store.addSelection(newSelection)
-
+  const top = selectionRect.top || 0
+  const left = selectionRect.left || 0
   if (selectionRect) {
     // Create text with black color
     let label = new fabric.Text(`#${selectionIndex}`, {
@@ -187,17 +188,17 @@ function saveSelection() {
     })
     fabricCanvas.add(label)
     label.set({
-      left: selectionRect.left + 5,
-      top: selectionRect.top - 25,
+      left: left + 5,
+      top: top - 25,
     })
 
     // Create a background rectangle based on text width
     let bgRect = new fabric.Rect({
-      left: label.left - 5, // Slight padding around text
-      top: label.top - 5,
+      left: (label.left ?? 0) - 5, // Slight padding around text
+      top: (label.top ?? 0) - 5,
       fill: '#ffffff', // White background
-      width: label.width + 10, // Slightly wider than text
-      height: label.height + 10, // Slightly taller than text
+      width: (label.width ?? 0) + 10, // Slightly wider than text
+      height: (label.height ?? 0) + 10, // Slightly taller than text
       rx: 10, // Round corners
       ry: 10,
       shadow: '2px 2px 5px rgba(0,0,0,0.2)',
@@ -257,8 +258,8 @@ onMounted(async () => {
 })
 
 /*
-   Start Drawing Canvas
-  */
+ Start Drawing Canvas
+*/
 let imgBounds = { left: 0, top: 0, right: 0, bottom: 0 }
 function initializeCanvas(imageUrl: string) {
   // console.log('Initializing canvas with image URL:', imageUrl);
@@ -433,8 +434,8 @@ function initDrawingAndSelection() {
 }
 
 /*
-   End Drawing Canvas
-  */
+ End Drawing Canvas
+*/
 
 function resetUpload() {
   console.log('Resetting upload...')
