@@ -186,6 +186,7 @@ function saveSelection() {
     // 創建文字標籤
     const labelText = `Region #${selectionIndex}`
     const label = new fabric.Text(labelText, {
+      fontFamily: 'Arial',
       left: (selectionRect.left ?? 0) + 5,
       top: (selectionRect.top ?? 0) - 20,
       fontSize: 12,
