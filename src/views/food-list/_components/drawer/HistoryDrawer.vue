@@ -6,6 +6,7 @@
         v-for="(entry, index) in historyData"
         :key="index"
         class="history-item"
+        @click="selectHistoryItem(entry)"
       >
         <div v-if="entry.imageUrl">
           <img
@@ -54,7 +55,7 @@ interface DrawerProps {
 
 const props = defineProps<DrawerProps>()
 const drawerVisible = ref(props.modelValue)
-const emit = defineEmits(['update:modelValue', 'remove'])
+const emit = defineEmits(['update:modelValue', 'remove', 'select-history-item'])
 const hover = ref<number | null>(null)
 
 watch(
@@ -80,6 +81,10 @@ function confirmRemoveForm(formId: string) {
     },
   })
 }
+
+function selectHistoryItem(item: any) {
+  emit('select-history-item', item)
+}
 </script>
 
 <style scoped>
@@ -94,6 +99,7 @@ function confirmRemoveForm(formId: string) {
   overflow-y: auto;
   max-height: 80vh;
   padding: 0 20px;
+  cursor: pointer;
 }
 
 .history-item {

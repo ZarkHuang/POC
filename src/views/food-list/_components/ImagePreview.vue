@@ -72,6 +72,7 @@ const emit = defineEmits([
 ])
 defineExpose({
   removeSelectionById,
+  loadImage,
 })
 
 //透過父組件Form刪除框選狀態以及Label
@@ -164,10 +165,23 @@ function saveSelection() {
 
   // 轉換 corners 物件的值為字串
   const cornersString = formatCorners(cornersObject)
+
+  // Capture selection details for later recreation
+  const selectionDetails = {
+    left: selectionRect.left,
+    top: selectionRect.top,
+    width: selectionRect.width,
+    height: selectionRect.height,
+    scaleX: selectionRect.scaleX,
+    scaleY: selectionRect.scaleY,
+  }
+
   const newSelection = {
     id: uniqueId,
     imageUrl: croppedImgUrl,
+    originalImageUrl: imageSrc.value,
     corners: cornersObject,
+    selectionDetails: selectionDetails,
   }
 
   selections.push(newSelection)
@@ -176,6 +190,8 @@ function saveSelection() {
     data: newSelection,
     labelIndex: selectionIndex,
     imageUrl: croppedImgUrl,
+    originalImageUrl: imageSrc.value,
+    electionDetails: selectionDetails,
     corners: cornersString,
   })
   store.addSelection(newSelection)
@@ -281,7 +297,7 @@ function initializeCanvas(imageUrl: string) {
         loadedImg.height,
       )
       if (fabricCanvas) {
-        console.log('Image loaded:', loadedImg)
+        // console.log('Image loaded:', loadedImg)
         const scale = Math.min(
           (fabricCanvas.width ?? 0) / (loadedImg.width ?? 0),
           (fabricCanvas.height ?? 0) / (loadedImg.height ?? 0),
@@ -447,6 +463,12 @@ function resetUpload() {
   if (fileInput.value) {
     fileInput.value.value = ''
   }
+}
+
+function loadImage(url: string) {
+  imageSrc.value = url // 更新圖片
+  imageUploaded.value = true // 卻是標記圖片是否已經上傳
+  initializeCanvas(url) // 重新初始化canvas
 }
 </script>
 

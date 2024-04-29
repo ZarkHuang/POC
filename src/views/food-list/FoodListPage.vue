@@ -21,6 +21,7 @@
             v-model="drawerVisible"
             :historyData="history"
             @remove="handleRemoveForm"
+            @select-history-item="handleHistorySelect"
           />
         </div>
         <NScrollbar style="max-height: calc(100vh - 168px)">
@@ -104,13 +105,17 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { NForm, NInput, NButton, NGrid, NGi, NScrollbar } from 'naive-ui'
+import { FormData, FormInstance, HistoryItem, SelectionData } from '@/global'
+//icon
+import { NoImage } from '@vicons/carbon'
+//store
+import { useSelectionStore } from '@/stores/selectionStore'
+//compoe
 import ImagePreview from '@/views/food-list/_components/ImagePreview.vue'
 import HistoryDrawer from '@/views/food-list/_components/drawer/HistoryDrawer.vue'
 import EditButton from '@/views/food-list/_components/button/EditButton.vue'
-import { useSelectionStore } from '@/stores/selectionStore'
-import { FormData, FormInstance, HistoryItem, SelectionData } from '@/global'
-import { NoImage } from '@vicons/carbon'
-const imagePreviewRef = ref(null)
+
+const imagePreviewRef = ref<typeof ImagePreview | null>(null)
 
 const history: Ref<HistoryItem[]> = ref([])
 const forms = reactive<FormInstance[]>([])
@@ -152,6 +157,7 @@ function addFormWithData(selectionData: SelectionData) {
   forms.push({
     id: selectionData.id,
     imageUrl: selectionData.imageUrl,
+    originalImageUrl: selectionData.originalImageUrl,
     data: createFormData(),
     editable: true,
     labelIndex: useSelectionStore().getNextLabelIndex(),
@@ -213,6 +219,7 @@ function submitForm(form: FormInstance) {
     label: form.label || `Image${form.labelIndex}`,
     data: { ...form.data },
     imageUrl: form.imageUrl,
+    originalImageUrl: form.originalImageUrl || '',
     timestamp: Date.now(),
   })
   showModal.value = false
@@ -269,6 +276,12 @@ function handleRemoveForm(formId: string) {
     if (historyIndex !== -1) {
       history.value.splice(historyIndex, 1)
     }
+  }
+}
+
+function handleHistorySelect(item: { originalImageUrl: string }) {
+  if (imagePreviewRef.value) {
+    imagePreviewRef.value.loadImage(item.originalImageUrl)
   }
 }
 </script>
