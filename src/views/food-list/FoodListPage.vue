@@ -1,99 +1,80 @@
 <template>
   <NSpace vertical>
-    <NGrid cols="3" x-gap="12">
-      <NGi :span="1">
-        <ImagePreview
-          ref="imagePreviewRef"
-          @selection-saved="addFormWithData"
-          @selection-removed="handleSelectionRemoved"
-        />
+    <NGrid cols="12" x-gap="12">
+      <NGi class="image-selector">
+        <NSpace vertical align="center">
+          <NButton :disabled="atTop" @click="scrollUp" type="primary" size="large">
+            <NIcon size="20" :component="ArrowUp" />
+          </NButton>
+          <div class="image-scroll-container" ref="scrollContainer" @scroll="checkScrollPosition">
+            <NGrid cols="1" x-gap="6">
+              <NGi v-for="(image, index) in images" :key="index">
+                <NButton :style="getButtonStyle(index)" @click="selectImage(index)" style='padding:0'>
+                  <div class="image-container" @click="selectImage(index)">
+                    <img :src="image.url" :alt="'Image ' + (index + 1)" class="image-preview" />
+                  </div>
+                </NButton>
+              </NGi>
+            </NGrid>
+          </div>
+          <NButton :disabled="atBottom" @click="scrollDown" type="primary" size="large">
+            <NIcon size="20" :component="ArrowDown" />
+          </NButton>
+        </NSpace>
       </NGi>
-      <NGi :span="2">
+
+      <NGi :span="10">
+        <NCarousel :current-index="selectedImage" :show-dots="false" trigger="click" class="carousel-image-container">
+          <NCarouselItem v-for="(image, index) in images" :key="index">
+            <div>
+              <img :src="image.url" class="carousel-image" alt="Carousel Image" />
+            </div>
+          </NCarouselItem>
+        </NCarousel>
+      </NGi>
+
+      <!-- 表單區域 -->
+      <NGi :span="12">
+        <NDivider />
         <div class="form-header">
           <PageTitle>辨識結果</PageTitle>
-          <div class="button-group">
-            <NButton @click="addForm" style="margin-right: 10px"
-              >新增表單</NButton
-            >
-            <NButton type="primary" @click="toggleDrawer">歷史紀錄</NButton>
-          </div>
-          <HistoryDrawer
-            v-model="drawerVisible"
-            :historyData="history"
-            @remove="handleRemoveForm"
-            @select-history-item="handleHistorySelect"
-          />
         </div>
-        <NScrollbar style="max-height: calc(100vh - 168px)">
+
+        <NScrollbar>
           <div v-for="form in forms" :key="form.id" class="form-content">
-            <NGrid
-              cols="3"
-              justify="end"
-              class="form-title-container"
-              style="margin-bottom: 12px; margin-top: -12px"
-            >
-              <NGi>
-                <div class="form-title-container">
-                  <div v-if="form.isCustom" class="default-icon-container">
-                    <NIcon size="20" :component="NoImage" />
-                  </div>
-                  <img
-                    v-else
-                    :src="form.imageUrl"
-                    alt="Selected Image"
-                    class="form-image-thumbnail"
-                  />
-                  <NH5 class="form-title">{{
-                    form.label || `#${form.labelIndex}`
-                  }}</NH5>
-                </div>
-              </NGi>
-              <NGi :span="2">
-                <div
-                  style="
-                    display: flex;
-                    justify-content: flex-end;
-                    align-items: center;
-                  "
-                >
-                  <NH5 class="form-title" style="margin: 0px 16px"
-                    >名字：王大明</NH5
-                  >
-                  <NH5 class="form-title" style="margin: 0px 16px"
-                    >時間：
+            <NGrid cols="1" justify="end" class="form-title-container" style="margin-bottom: 12px; margin-top: -12px">
+              <NGi justify="end">
+                <div style="display: flex; justify-content: flex-end; align-items: center; width: 100%;">
+                  <NH5 class="form-title" style="margin: 0px 16px">名字：王大明</NH5>
+                  <NH5 class="form-title" style="margin: 0px 16px">
+                    時間：
                     <NTime :time="Date.now()" type="date" />
                   </NH5>
-                  <EditButton
-                    type="primary"
-                    ghost
-                    :form="form"
-                    @edit="enableEditing"
-                    :isDisabled="isSubmitting"
-                  />
+                  <EditButton type="primary" ghost :form="form" @edit="enableEditing" :isDisabled="isSubmitting" />
                 </div>
               </NGi>
             </NGrid>
-            <NForm ref="formRef" :model="form.data" class="form-row">
-              <div v-for="item in formItems" :key="item.path" class="form-item">
-                <label class="form-label">{{ item.label }}</label>
-                <NInput
-                  class="form-input"
-                  :disabled="!form.editable"
-                  v-model:value="form.data[item.path]"
-                />
-              </div>
-            </NForm>
 
-            <div style="display: flex; justify-content: end">
-              <NButton
-                @click="confirmSubmit(form)"
-                :disabled="!form.canSubmit"
-                style="margin-right: 10px"
-                >提交</NButton
-              >
-              <NButton type="error" @click="confirmRemoveForm(form.id)"
-                >删除</NButton
-              >
+            <NSpace vertical>
+              <NTable striped>
+                <thead>
+                  <tr>
+                    <th v-for="label in foodLabels" :key="label">{{ label }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in form.inputGroups" :key="row[0]?.path">
+                    <td v-for="item in row" :key="item.path">
+                      <NInput v-model:value="form.data[item.path]" :disabled="!form.editable" />
+                    </td>
+                  </tr>
+                </tbody>
+              </NTable>
+            </NSpace>
+
+            <div style="display: flex; justify-content: space-between">
+              <NButton @click="addMultipleInputs(form)" type="primary" style="margin-left: 10px;">+</NButton>
+              <NButton @click="confirmSubmit(form)" :disabled="!form.canSubmit" style="margin-right: 10px">提交</NButton>
             </div>
           </div>
         </NScrollbar>
@@ -103,24 +84,32 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
-import { NForm, NInput, NButton, NGrid, NGi, NScrollbar } from 'naive-ui'
-import { FormData, FormInstance, HistoryItem, SelectionData } from '@/global'
+import { reactive, ref } from 'vue'
+import { NInput, NButton, NGrid, NGi, NScrollbar } from 'naive-ui'
+import { FormData, FormInstance, HistoryItem } from '@/global'
 //icon
-import { NoImage } from '@vicons/carbon'
-//store
-import { useSelectionStore } from '@/stores/selectionStore'
+import { ArrowUp, ArrowDown } from '@vicons/carbon'
 //compoe
-import ImagePreview from '@/views/food-list/_components/ImagePreview.vue'
-import HistoryDrawer from '@/views/food-list/_components/drawer/HistoryDrawer.vue'
 import EditButton from '@/views/food-list/_components/button/EditButton.vue'
 
-const imagePreviewRef = ref<typeof ImagePreview | null>(null)
-
+const images = reactive([
+  { url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel4.jpeg' },
+  { url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel3.jpeg' },
+  { url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel2.jpeg' },
+  { url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel1.jpeg' },
+  { url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel4.jpeg' },
+  { url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel3.jpeg' },
+  { url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel2.jpeg' },
+  { url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel1.jpeg' },
+])
+let selectedImage = ref(0)
+const scrollContainer = ref<HTMLDivElement | null>(null)
+const atTop = ref(true);
+const atBottom = ref(false);
 const history: Ref<HistoryItem[]> = ref([])
 const forms = reactive<FormInstance[]>([])
 let idCounter = 0
-const drawerVisible = ref(false)
+
 const foodLabels = [
   '食物',
   '麵、飯、麵包、蔬菜、水果、豬肉、豆干、等等) ',
@@ -137,6 +126,46 @@ const formItems = foodLabels.map((label, i) => ({
   path: `name${i + 1}`,
 }))
 
+function selectImage(index: number) {
+  selectedImage.value = index
+}
+
+function scrollUp() {
+  if (scrollContainer.value) {
+    scrollContainer.value.scrollTop -= 60;
+    checkScrollPosition();
+  }
+}
+
+function scrollDown() {
+  if (scrollContainer.value) {
+    scrollContainer.value.scrollTop += 60;
+    checkScrollPosition();
+  }
+}
+
+function checkScrollPosition() {
+  const container = scrollContainer.value;
+  if (!container) return;
+  atTop.value = container.scrollTop === 0;
+  atBottom.value = container.scrollTop + container.clientHeight >= container.scrollHeight;
+}
+
+function getButtonStyle(index: number) {
+  const isSelected = selectedImage.value === index
+  return {
+    width: isSelected ? '60px' : '50px',
+    height: isSelected ? '60px' : '50px',
+    margin: '8px auto',
+    backgroundColor: isSelected ? '#fff' : '#f0f0f0',
+    color: isSelected ? 'black' : 'black',
+    transition: 'all 0.3s ease-in-out',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
+}
+
 function createFormData(): FormData {
   return formItems.reduce(
     (acc, item) => ({
@@ -147,72 +176,59 @@ function createFormData(): FormData {
   )
 }
 
-const currentLabelIndex = ref(1)
-function resetLabelIndex() {
-  currentLabelIndex.value = 1
+function createFormItems() {
+  return foodLabels.map((label, index) => ({
+    label: label,
+    path: `name${index + 1}`,
+  }))
 }
 
-function addFormWithData(selectionData: SelectionData) {
-  console.log('Received selection-saved with ID:', selectionData.id)
-  forms.push({
-    id: selectionData.id,
-    imageUrl: selectionData.imageUrl,
-    originalImageUrl: selectionData.originalImageUrl,
-    data: createFormData(),
-    editable: true,
-    labelIndex: useSelectionStore().getNextLabelIndex(),
-    isCustom: false,
-    canSubmit: true,
-  })
+function addMultipleInputs(form: FormInstance) {
+  const newFormItems = foodLabels.map((label, index) => ({
+    label: label,
+    path: `name${form.formItems.length + index + 1}`, // 確保鍵值唯一
+  }));
+
+  // 新增至 formItems 和 inputGroups
+  form.formItems.push(...newFormItems);
+  form.inputGroups.push(newFormItems);
+
+  // 初始化空的輸入數據
+  newFormItems.forEach((item) => {
+    form.data[item.path] = '';
+  });
 }
 
-function addForm() {
-  const store = useSelectionStore()
-  forms.push({
-    id: `form-${idCounter++}`,
-    data: createFormData(),
-    editable: true,
-    label: `自定義${store.getNextCustomIndex()}`,
-    labelIndex: 0,
-    imageUrl: '',
-    isCustom: true,
-    canSubmit: true,
-  })
-}
-
-function handleSelectionRemoved(data: { id: string }) {
-  console.log('Received selection-removed with ID:', data.id)
-  const index = forms.findIndex((form) => form.id === data.id)
-  if (index !== -1) {
-    console.log('Removing form with index:', index)
-    forms.splice(index, 1)
-  }
-}
+// 新增初始表單
+forms.push({
+  id: `form-${idCounter++}`,
+  data: createFormData(),
+  formItems: createFormItems(),
+  inputGroups: [createFormItems()],
+  editable: true,
+  canSubmit: true,
+})
 
 const dialog = useDialog()
-// const showModal = ref(false);
 const isSubmitting = ref(false)
 function confirmSubmit(form: FormInstance) {
-  if (!form.canSubmit) return
+  if (!form.canSubmit) return;
 
-  isSubmitting.value = true
   dialog.success({
     title: '確認提交',
-    content: '你確定要提交這個表單吗？',
+    content: '您確定要提交這個表單嗎？',
     positiveText: '確定',
     negativeText: '取消',
     onPositiveClick: () => submitForm(form),
-  })
-  setTimeout(() => {
-    isSubmitting.value = false
-  }, 2000)
+  });
 }
 
-const showModal = ref(false)
+
 function submitForm(form: FormInstance) {
-  console.log('提交:', form.data)
-  form.editable = false
-  form.canSubmit = false
+  console.log('提交:', form.data);
+
+  form.editable = false;
+  form.canSubmit = false;
 
   history.value.push({
     id: form.id,
@@ -221,8 +237,7 @@ function submitForm(form: FormInstance) {
     imageUrl: form.imageUrl,
     originalImageUrl: form.originalImageUrl || '',
     timestamp: Date.now(),
-  })
-  showModal.value = false
+  });
 }
 
 function enableEditing(form: FormInstance) {
@@ -230,60 +245,6 @@ function enableEditing(form: FormInstance) {
   form.canSubmit = true
 }
 
-function toggleDrawer() {
-  drawerVisible.value = !drawerVisible.value
-}
-
-function confirmRemoveForm(formId: string) {
-  dialog.error({
-    title: '確認刪除',
-    content: '您確定要刪除這個表單嗎？這個操作無法撤銷。',
-    positiveText: '確定刪除',
-    negativeText: '取消',
-    onPositiveClick: () => {
-      removeForm(formId)
-      // dialog.destroyAll();
-    },
-  })
-}
-
-function removeForm(formId: string) {
-  const formIndex = forms.findIndex((form) => form.id === formId)
-  if (formIndex !== -1) {
-    console.log('Removing form with index:', formIndex)
-    forms.splice(formIndex, 1)
-    const historyIndex = history.value.findIndex((h) => h.id === formId)
-    if (historyIndex !== -1) {
-      history.value.splice(historyIndex, 1)
-    }
-    if (imagePreviewRef.value) {
-      ;(imagePreviewRef.value as any)?.removeSelectionById(formId)
-    }
-    if (forms.length === 0) {
-      resetLabelIndex()
-    }
-  }
-}
-
-function handleRemoveForm(formId: string) {
-  if (imagePreviewRef.value) {
-    ;(imagePreviewRef.value as any)?.removeSelectionById(formId)
-  }
-  const formIndex = forms.findIndex((form) => form.id === formId)
-  if (formIndex !== -1) {
-    forms.splice(formIndex, 1)
-    const historyIndex = history.value.findIndex((h) => h.id === formId)
-    if (historyIndex !== -1) {
-      history.value.splice(historyIndex, 1)
-    }
-  }
-}
-
-function handleHistorySelect(item: { originalImageUrl: string }) {
-  if (imagePreviewRef.value) {
-    imagePreviewRef.value.loadImage(item.originalImageUrl)
-  }
-}
 </script>
 
 <style scoped>
@@ -367,8 +328,61 @@ function handleHistorySelect(item: { originalImageUrl: string }) {
 .form-label {
   height: 100px;
   margin-bottom: 4px;
-
   display: flex;
   align-items: center;
+}
+
+.carousel-image-container {
+  position: relative;
+  width: 100%;
+  height: calc(50vh);
+  border: 2px solid #dce4ec;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.carousel-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+
+.image-selector {
+  flex: 0 0 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.image-scroll-container {
+  overflow-y: auto;
+  height: calc(50vh);
+  max-height: 360px;
+  width: 100%;
+}
+
+.image-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.image-container {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.image-preview {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
 }
 </style>

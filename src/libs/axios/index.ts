@@ -1,9 +1,10 @@
 import axios from 'axios'
 
-const apiBaseUrl = import.meta.env.VITE_APP_API_URL
-
 export const axiosInstance = axios.create({
-  baseURL: `${apiBaseUrl}`,
+  baseURL: import.meta.env.VITE_APP_HOST_API_URL,
+  headers: {
+    'X-Authy-API-Key': import.meta.env.VITE_APP_HOST_API_KEY,
+  },
 })
 
 axiosInstance.interceptors.request.use(

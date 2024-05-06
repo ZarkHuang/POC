@@ -38,8 +38,14 @@ export default defineConfig({
       },
     ],
   },
-  // server: {
-  //   host: true,
-  //   port: 39999,
-  // },
+  server: {
+    proxy: {
+      '/v1': {
+        target: 'https://dev-cn.your-api-server.com',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/v1/, ''),
+      },
+    },
+  }
 })
