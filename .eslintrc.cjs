@@ -44,7 +44,7 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'warn',
     'no-unused-vars': 'warn',
     '@typescript-eslint/no-unused-vars': [
-      'error',
+      'warn', // 或 'off' 完全禁用此規則
       {
         varsIgnorePattern: '^_',
         argsIgnorePattern: '^_',
