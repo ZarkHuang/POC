@@ -31,7 +31,7 @@ function emitClose(event: { stopPropagation: () => void }) {
 }
 
 .close-icon:hover {
-  background-color: rgba(24, 160, 88, 0.16);
-  color: #18a058;
+  background-color: #34495e;
+  color: white;
 }
 </style>

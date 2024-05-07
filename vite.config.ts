@@ -41,11 +41,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/v1': {
-        target: 'https://dev-cn.your-api-server.com',
+        target: 'https://food-ai.efaipd.com/api',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/v1/, ''),
       },
     },
-  }
+  },
 })

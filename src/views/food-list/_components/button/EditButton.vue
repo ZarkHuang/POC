@@ -1,7 +1,6 @@
 <template>
   <NButton :disabled="isDisabled" @click="enableEditing">
     <NIcon :component="Edit" />
-    <span v-if="!isDisabled">編輯</span>
   </NButton>
 </template>
 
