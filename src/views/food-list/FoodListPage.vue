@@ -2,14 +2,10 @@
   <NSpace vertical>
     <NGrid cols="12" x-gap="12">
       <NGi class="image-selector">
-        <ImageSelector
-          :images="images"
-          :selectImage="selectImage"
-          :selectedImage="selectedImage"
-        />
+        <ImageSelector :images="images.map(image => ({ url: image.thumbnailUrl }))" @update:selectedImage="updateSelectedImage" :selectedImage="selectedImage" />
       </NGi>
       <NGi :span="10">
-        <ImageCarousel :images="images" :selectedImage="selectedImage" />
+        <ImageCarousel :images="images.map(image => ({ url: image.fullImageUrl }))" :selectedImage="selectedImage" />
       </NGi>
 
       <!-- 表單區域 -->
@@ -21,35 +17,20 @@
 
         <NScrollbar>
           <div v-for="form in forms" :key="form.id" class="form-content">
-            <NGrid
-              cols="1"
-              justify="end"
-              class="form-title-container"
-              style="margin-bottom: 12px; margin-top: -12px"
-            >
+            <NGrid cols="1" justify="end" class="form-title-container" style="margin-bottom: 12px; margin-top: -12px">
               <NGi justify="end">
-                <div
-                  style="
+                <div style="
                     display: flex;
                     justify-content: flex-end;
                     align-items: center;
                     width: 100%;
-                  "
-                >
-                  <NH5 class="form-title" style="margin: 0px 16px"
-                    >名字：王大明</NH5
-                  >
+                  ">
+                  <NH5 class="form-title" style="margin: 0px 16px">名字：王大明</NH5>
                   <NH5 class="form-title" style="margin: 0px 16px">
                     時間：
                     <NTime :time="Date.now()" type="date" />
                   </NH5>
-                  <EditButton
-                    type="primary"
-                    ghost
-                    :form="form"
-                    @edit="enableEditing"
-                    :isDisabled="isSubmitting"
-                  />
+                  <EditButton type="primary" ghost :form="form" @edit="enableEditing" :isDisabled="isSubmitting" />
                 </div>
               </NGi>
             </NGrid>
@@ -65,28 +46,15 @@
                 <tbody>
                   <tr v-for="row in form.inputGroups" :key="row[0]?.path">
                     <td v-for="item in row" :key="item.path">
-                      <NInput
-                        v-model:value="form.data[item.path]"
-                        :disabled="!form.editable"
-                      />
+                      <NInput v-model:value="form.data[item.path]" :disabled="!form.editable" />
                     </td>
                   </tr>
                 </tbody>
               </NTable>
             </NSpace>
             <div style="display: flex; justify-content: space-between">
-              <NButton
-                @click="addMultipleInputs(form)"
-                type="primary"
-                style="margin-left: 10px"
-                >+</NButton
-              >
-              <NButton
-                @click="confirmSubmit(form)"
-                :disabled="!form.canSubmit"
-                style="margin-right: 10px"
-                >提交</NButton
-              >
+              <NButton @click="addMultipleInputs(form)" type="primary" style="margin-left: 10px">+</NButton>
+              <NButton @click="confirmSubmit(form)" :disabled="!form.canSubmit" style="margin-right: 10px">提交</NButton>
             </div>
           </div>
         </NScrollbar>
@@ -104,32 +72,35 @@ import ImageCarousel from '@/views/food-list/ImageCarousel.vue'
 //compoe
 import EditButton from '@/views/food-list/_components/button/EditButton.vue'
 
-const images = reactive([
-  {
-    url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel4.jpeg',
-  },
-  {
-    url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel3.jpeg',
-  },
-  {
-    url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel2.jpeg',
-  },
-  {
-    url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel1.jpeg',
-  },
-  {
-    url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel4.jpeg',
-  },
-  {
-    url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel3.jpeg',
-  },
-  {
-    url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel2.jpeg',
-  },
-  {
-    url: 'https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel1.jpeg',
-  },
-])
+import { fetchUserImages } from '@/services/api/report';
+import { useAuthStore } from '@/stores/authStore'; // 確保引入了 authStore 來訪問 token
+const authStore = useAuthStore(); 
+
+const images = ref([]);
+onMounted(async () => {
+  try {
+    if (authStore.authState.isLoggedIn && authStore.authState.token) {
+      const response = await fetchUserImages();
+      if (response) { 
+        images.value = response.map((img: { image_id: string }) => ({
+          thumbnailUrl: `https://food-ai.efaipd.com/api/images/${img.image_id}/thumbnail`,
+          fullImageUrl: `https://food-ai.efaipd.com/api/images/${img.image_id}/view`
+        }));
+      }
+      console.log(images);
+    } else {
+      console.error('Not logged in or token is missing');
+    }
+  } catch (error) {
+    console.error('Error fetching images:', error);
+  }
+});
+
+
+function updateSelectedImage(index) {
+  selectedImage.value = index;
+}
+
 const selectedImage = ref(0)
 const history: Ref<HistoryItem[]> = ref([])
 const forms = reactive<FormInstance[]>([])
@@ -137,9 +108,7 @@ let idCounter = 0
 
 const foodLabels = [
   '食物(麵、飯、麵包、蔬菜..等等)',
-  // '麵、飯、麵包、蔬菜、水果、豬肉、豆干、等等) ',
   '烹飪方式 (炸、烤、煎、炒、滷...等等)',
-  // '調味(醬:糖醋/泰式/蘑菇/黑胡椒/等等、辣椒、起司粉、等等)',
   '數量',
   '熱量 (kcal/100g)',
   '蛋白質 (g/100g)',
@@ -151,11 +120,6 @@ const formItems = foodLabels.map((label, i) => ({
   label: label,
   path: `name${i + 1}`,
 }))
-
-function selectImage(index: number) {
-  selectedImage.value = index
-}
-
 function createFormData(): FormData {
   return formItems.reduce(
     (acc, item) => ({

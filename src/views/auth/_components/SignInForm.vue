@@ -62,7 +62,7 @@ function handleSignInClick(e: MouseEvent) {
             const token = response.access_token
             authStore.setLoginStatus(true, token)
             message.success('登入成功')
-            router.push('/food-ing')
+            router.push({ name: 'food-list' });
           },
           onError: (error: any) => {
             message.error(

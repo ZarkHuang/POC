@@ -1,28 +1,24 @@
-ImageCarousel
 <template>
-  <NCarousel
-    :current-index="selectedImage"
-    :show-dots="false"
-    trigger="click"
-    class="carousel-image-container"
-  >
-    <NCarouselItem v-for="(image, index) in images" :key="index">
-      <div>
-        <img :src="image.url" class="carousel-image" alt="Carousel Image" />
-      </div>
-    </NCarouselItem>
-  </NCarousel>
+    <NCarousel :current-index="selectedImage" :show-dots="false" trigger="click" class="carousel-image-container">
+        <NCarouselItem v-for="(image, index) in images" :key="index">
+            <div>
+                <img :src="image.url" class="carousel-image" alt="Carousel Image" />
+            </div>
+        </NCarouselItem>
+    </NCarousel>
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
-import { NCarousel, NCarouselItem } from 'naive-ui'
+import { defineProps } from 'vue';
+import { NCarousel, NCarouselItem } from 'naive-ui';
 
 const props = defineProps<{
-  images: { url: string }[]
-  selectedImage: number
-}>()
+    images: { url: string }[];
+    selectedImage: number;
+}>();
+
 </script>
+
 
 <style scoped>
 .carousel-image-container {

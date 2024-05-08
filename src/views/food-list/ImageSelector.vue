@@ -1,39 +1,20 @@
-ImageSelector
 <template>
   <NSpace vertical align="center">
     <NButton :disabled="atTop" @click="scrollUp" type="primary" size="large">
       <NIcon size="20" :component="ArrowUp" />
     </NButton>
-    <div
-      class="image-scroll-container"
-      ref="scrollContainer"
-      @scroll="checkScrollPosition"
-    >
+    <div class="image-scroll-container" ref="scrollContainer" @scroll="checkScrollPosition">
       <NGrid cols="1" x-gap="6">
-        <NGi v-for="(image, index) in images" :key="index">
-          <NButton
-            :style="getButtonStyle(index)"
-            @click="selectImage(index)"
-            style="padding: 0"
-            class="test"
-          >
-            <div class="image-container" @click="selectImage(index)">
-              <img
-                :src="image.url"
-                :alt="'Image ' + (index + 1)"
-                class="image-preview"
-              />
-            </div>
-          </NButton>
-        </NGi>
-      </NGrid>
+      <NGi v-for="(image, index) in images" :key="image.url">
+        <NButton :style="getButtonStyle(index)" @click="selectImage(index)" style="padding: 0">
+          <div class="image-container" @click="selectImage(index)">
+            <img :src="image.url" :alt="'Image ' + (index + 1)" class="image-preview" />
+          </div>
+        </NButton>
+      </NGi>
+    </NGrid>
     </div>
-    <NButton
-      :disabled="atBottom"
-      @click="scrollDown"
-      type="primary"
-      size="large"
-    >
+    <NButton :disabled="atBottom" @click="scrollDown" type="primary" size="large">
       <NIcon size="20" :component="ArrowDown" />
     </NButton>
   </NSpace>
@@ -44,16 +25,21 @@ import { ref, defineProps } from 'vue'
 import { NButton, NIcon, NGrid, NGi, NSpace } from 'naive-ui'
 import { ArrowUp, ArrowDown } from '@vicons/carbon'
 
+ 
 const props = defineProps<{
-  images: { url: string }[]
-  selectedImage: number
-  selectImage: (index: number) => void
-}>()
-
-const { images, selectedImage, selectImage } = props
+  images: { url: string }[]  
+  selectedImage: number 
+}>();
+ 
 const scrollContainer = ref<HTMLDivElement | null>(null)
 const atTop = ref(true)
 const atBottom = ref(false)
+// const selectImage =()=>{}
+
+const emit = defineEmits(['update:selectedImage']);
+function selectImage(index) {
+  emit('update:selectedImage', index);
+}
 
 function scrollUp() {
   if (scrollContainer.value) {
@@ -93,6 +79,7 @@ function getButtonStyle(index: number) {
   }
 }
 </script>
+
 <style scoped>
 .image-scroll-container {
   overflow-y: auto;
