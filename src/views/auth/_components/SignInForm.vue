@@ -2,12 +2,13 @@
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useAdminLogin } from '@/services/api'
-import type {
-  FormInst,
-  FormItemRule,
-  FormRules,
-  FormValidationError,
+import {
+useMessage,
+  type FormInst,
+  type FormRules,
+  type FormValidationError,
 } from 'naive-ui'
+import { useRouter } from 'vue-router';
 
 type FormData = {
   acc: string // 使用 `acc` 作為帳號
@@ -57,7 +58,7 @@ function handleSignInClick(e: MouseEvent) {
           },
         },
         {
-          onSuccess: (response) => {
+          onSuccess: (response: { access_token: any; }) => {
             console.log('Login response:', response)
             const token = response.access_token
             authStore.setLoginStatus(true, token)

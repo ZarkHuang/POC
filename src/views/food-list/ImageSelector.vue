@@ -7,8 +7,8 @@
       <NGrid cols="1" x-gap="6">
       <NGi v-for="(image, index) in images" :key="image.url">
         <NButton :style="getButtonStyle(index)" @click="selectImage(index)" style="padding: 0">
-          <div class="image-container" @click="selectImage(index)">
-            <img :src="image.url" :alt="'Image ' + (index + 1)" class="image-preview" />
+          <div class="image-container">
+            <img :src="image.url" :alt="'Image ' + (index + 1)" loading="lazy" class="image-preview" />
           </div>
         </NButton>
       </NGi>
@@ -37,7 +37,8 @@ const atBottom = ref(false)
 // const selectImage =()=>{}
 
 const emit = defineEmits(['update:selectedImage']);
-function selectImage(index) {
+
+function selectImage(index: any) {
   emit('update:selectedImage', index);
 }
 

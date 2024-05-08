@@ -8,13 +8,13 @@
         <ImageCarousel :images="images.map(image => ({ url: image.fullImageUrl }))" :selectedImage="selectedImage" />
       </NGi>
 
+
       <!-- 表單區域 -->
       <NGi :span="12">
         <NDivider />
         <div class="form-header">
           <PageTitle>辨識結果</PageTitle>
         </div>
-
         <NScrollbar>
           <div v-for="form in forms" :key="form.id" class="form-content">
             <NGrid cols="1" justify="end" class="form-title-container" style="margin-bottom: 12px; margin-top: -12px">
@@ -64,19 +64,24 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { NInput, NButton, NGrid, NGi, NScrollbar } from 'naive-ui'
+import { reactive, ref , onMounted, Ref } from 'vue'
+import { NInput, NButton, NGrid, NGi, NScrollbar, useDialog } from 'naive-ui'
 import { FormData, FormInstance, HistoryItem } from '@/global'
 import ImageSelector from '@/views/food-list/ImageSelector.vue'
 import ImageCarousel from '@/views/food-list/ImageCarousel.vue'
-//compoe
+//compoment
 import EditButton from '@/views/food-list/_components/button/EditButton.vue'
-
 import { fetchUserImages } from '@/services/api/report';
-import { useAuthStore } from '@/stores/authStore'; // 確保引入了 authStore 來訪問 token
+import { useAuthStore } from '@/stores/authStore';
+
+
+interface Image {
+  thumbnailUrl: string;
+  fullImageUrl: string;
+}
+const images: Ref<Image[]> = ref([]);
 const authStore = useAuthStore(); 
 
-const images = ref([]);
 onMounted(async () => {
   try {
     if (authStore.authState.isLoggedIn && authStore.authState.token) {
@@ -97,7 +102,7 @@ onMounted(async () => {
 });
 
 
-function updateSelectedImage(index) {
+function updateSelectedImage(index: number) {
   selectedImage.value = index;
 }
 
@@ -155,12 +160,15 @@ function addMultipleInputs(form: FormInstance) {
 
 // 新增初始表單
 forms.push({
-  id: `form-${idCounter++}`,
-  data: createFormData(),
-  formItems: createFormItems(),
-  inputGroups: [createFormItems()],
-  editable: true,
-  canSubmit: true,
+id: `form-${idCounter++}`,
+data: createFormData(),
+formItems: createFormItems(),
+inputGroups: [createFormItems()],
+editable: true,
+canSubmit: true,
+labelIndex: 0,
+imageUrl: '',
+isCustom: false
 })
 
 const dialog = useDialog()
@@ -197,6 +205,9 @@ function enableEditing(form: FormInstance) {
   form.editable = true
   form.canSubmit = true
 }
+
+
+
 </script>
 
 <style scoped>
