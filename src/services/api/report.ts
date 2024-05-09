@@ -11,7 +11,6 @@ export const fetchUserImages = async (): Promise<any> => {
     }
   };
 
-
   export const recognizeImage = async (imageId: string): Promise<any> => {
     try {
         const response = await axiosInstance.post(`/images/${imageId}/ai`);
@@ -19,6 +18,18 @@ export const fetchUserImages = async (): Promise<any> => {
         return response;
     } catch (error) {
         console.error('Error during image recognition:', error);
+        throw error;
+    }
+};
+
+
+export const submitImageLabels = async (imageId: string, labelData: any): Promise<any> => {
+    try {
+        const response = await axiosInstance.post(`/images/${imageId}/label`, { label_data: labelData });
+        console.log("Label Submission Response:", response);
+        return response;
+    } catch (error) {
+        console.error('Error during label submission:', error);
         throw error;
     }
 };

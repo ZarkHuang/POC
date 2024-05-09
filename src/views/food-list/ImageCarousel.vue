@@ -1,13 +1,18 @@
 <template>
-    <div class="carousel-image-container">
-        <NCarousel :current-index="selectedImage" :show-dots="false" trigger="click">
-            <NCarouselItem v-for="(image, index) in images" :key="index">
-                <div>
-                    <img :src="image.url" class="carousel-image" loading="lazy" alt="Carousel Image" />
-                </div>
-            </NCarouselItem>
-        </NCarousel>
-        <NButton @click="triggerRecognition" type="primary">圖像辨識</NButton>
+    <div class="carousel-container">
+        <div class="carousel-image-container">
+            <NCarousel :current-index="selectedImage" :show-dots="false" trigger="click">
+                <NCarouselItem v-for="(image, index) in images" :key="index">
+                    <div>
+                        <img :src="image.url" class="carousel-image" loading="lazy" alt="Carousel Image" />
+                    </div>
+                </NCarouselItem>
+            </NCarousel>
+        </div>
+
+        <div class="button-container">
+            <NButton @click="triggerRecognition" type="primary">圖像辨識</NButton>
+        </div>
     </div>
 </template>
 
@@ -23,7 +28,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['recognitionResult']);
 
-function extractImageId(url) {
+function extractImageId(url: string) {
     const parts = url.split('/');
     const imageId = parts[parts.length - 2];
     return imageId;
@@ -36,30 +41,32 @@ async function triggerRecognition() {
     if (imageId) {
         try {
             const response = await recognizeImage(imageId);
-            console.log(response.data.data)
-            if (response.data.error_code === 0) {
-                emit('recognitionResult', response.data.data);
-            } else {
-                console.error('Recognition error:');
-            }
+            console.log(response);
+            emit('recognitionResult', response);
         } catch (error) {
             console.error('API call failed:', error);
         }
     }
 }
-
 </script>
 
-
-
 <style scoped>
+.carousel-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .carousel-image-container {
     position: relative;
     width: 100%;
     height: calc(50vh);
     border: 2px solid #dce4ec;
     margin-bottom: 24px;
-    /* overflow: hidden; */
 }
 
 .carousel-image {
