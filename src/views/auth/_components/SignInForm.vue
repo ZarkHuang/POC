@@ -46,7 +46,7 @@ const rules: FormRules = {
 const loginMutation = useAdminLogin()
 
 function handleSignInClick(e: MouseEvent) {
-  e.preventDefault()
+  e.preventDefault();
 
   formRef.value?.validate((errors: Array<FormValidationError> | undefined) => {
     if (!errors) {
@@ -59,26 +59,26 @@ function handleSignInClick(e: MouseEvent) {
         },
         {
           onSuccess: (response: { access_token: any; }) => {
-            // console.log('Login response:', response)
-            const token = response.access_token
-            authStore.setLoginStatus(true, token)
-            message.success('登入成功')
+            // 登录成功，存储令牌等操作
+            const token = response.access_token;
+            authStore.setLoginStatus(true, token);
+            message.success('登入成功');
             router.push({ name: 'food-list' });
           },
           onError: (error: any) => {
-            message.error(
-              `登入失敗：${error?.response?.data?.message || error.message}`,
-            )
+            const errorMessage = error?.response?.data?.error_desc || "帳號或密碼錯誤";
+            message.error(`登入失敗：${errorMessage}`);
           },
         },
-      )
+      );
     } else {
       errors.forEach((error) => {
-        message.error(error?.[0]?.message ?? '')
-      })
+        message.error(error?.[0]?.message ?? "表單驗證錯誤");
+      });
     }
-  })
+  });
 }
+
 </script>
 
 <template>
