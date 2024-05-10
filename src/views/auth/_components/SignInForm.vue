@@ -21,8 +21,8 @@ const message = useMessage()
 const router = useRouter()
 const formRef = ref<FormInst | null>(null)
 const formData = ref<FormData>({
-  acc: 'label1', // 預設值
-  password: 'test1234',
+  acc: '', // 預設值
+  password: '',
   remember: false,
 })
 const rules: FormRules = {
@@ -59,7 +59,7 @@ function handleSignInClick(e: MouseEvent) {
         },
         {
           onSuccess: (response: { access_token: any; }) => {
-            console.log('Login response:', response)
+            // console.log('Login response:', response)
             const token = response.access_token
             authStore.setLoginStatus(true, token)
             message.success('登入成功')

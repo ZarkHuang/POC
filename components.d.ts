@@ -30,7 +30,6 @@ declare module 'vue' {
     NLayoutFooter: typeof import('naive-ui')['NLayoutFooter']
     NLayoutHeader: typeof import('naive-ui')['NLayoutHeader']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
-    NSkeleton: typeof import('naive-ui')['NSkeleton']
     NSpace: typeof import('naive-ui')['NSpace']
     NTable: typeof import('naive-ui')['NTable']
     NText: typeof import('naive-ui')['NText']

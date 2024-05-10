@@ -1,4 +1,5 @@
 import { axiosInstance } from '@/libs/axios'
+import { useMutation } from '@tanstack/vue-query'
 
 const resourceUrl = '/admin'
 

@@ -34,7 +34,7 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore();
 
   console.log('Routing:', to.name, 'Logged in:', authStore.authState.isLoggedIn);

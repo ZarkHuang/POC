@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Logout } from '@vicons/carbon'
 import { useAuthStore } from '@/stores/authStore'
+import { useRouter } from 'vue-router';
 
 const authStore = useAuthStore()
 const router = useRouter()

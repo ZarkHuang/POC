@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-catch */
 import axios from 'axios'
-import { LOCAL_STORAGE_NAME } from '@/utils/config/keys'
+// import { LOCAL_STORAGE_NAME } from '@/utils/config/keys'
 import { useAuthStore } from '@/stores/authStore'
 
 const X_AUTHY_API_KEY = import.meta.env.VITE_APP_HOST_API_KEY

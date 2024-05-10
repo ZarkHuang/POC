@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import { ref, watch, defineProps, defineEmits } from 'vue'
-import { NDrawer, NIcon } from 'naive-ui'
+import { NDrawer, NIcon, useDialog } from 'naive-ui'
 import { CheckmarkFilled, Misuse } from '@vicons/carbon'
 import { NoImage } from '@vicons/carbon'
 import { HistoryItem } from '@/global'

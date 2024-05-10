@@ -6,9 +6,16 @@
           @update:selectedImage="updateSelectedImage" :selectedImage="selectedImage" />
       </NGi>
       <NGi :span="10">
-        <ImageCarousel
-          :images="selectedImage < images.length ? [images[selectedImage]].map(image => ({ url: image.fullImageUrl })) : []"
-          :selectedImage="selectedImage" @recognitionResult="handleRecognitionResult" />
+        <div v-if="isLoading">
+          <p>加载中...</p>
+        </div>
+        <div v-else-if="images.length > 0">
+          <ImageCarousel :images="images.map(image => ({ url: image.fullImageUrl }))" :selectedImage="selectedImage"
+            @recognitionResult="handleRecognitionResult" />
+        </div>
+        <div v-else>
+          <p>沒有任何資料</p>
+        </div>
       </NGi>
       <!-- 表單區域 -->
       <NGi :span="12">
@@ -42,16 +49,27 @@
               <tbody>
                 <tr v-for="(item, index) in tableData" :key="index">
                   <td v-for="(value, key) in item" :key="key">
-                    <NInput v-if="images[selectedImage].editable" :value="item[key]"/>
+                    <NInput v-if="images[selectedImage].editable" v-model="item[key]" />
                     <span v-else>{{ value }}</span>
                   </td>
+                </tr>
+                <tr v-if="tableData.length === 0">
+                  <td v-for="n in tableHeaders.length" :key="n">-</td>
+                </tr>
+                <tr>
+                  <td colspan="4">總計：</td>
+                  <td>{{ totalCalories }}</td>
+                  <td>{{ totalProtein }}</td>
+                  <td>{{ totalLipids }}</td>
+                  <td>{{ totalCarbohydrate }}</td>
                 </tr>
               </tbody>
             </NTable>
             <div style="display: flex; justify-content: end; padding: 10px 0;">
               <NButton @click="confirmSubmit(images[selectedImage])"
-                :disabled="!images[selectedImage].canSubmit || isSubmitting.value">提交</NButton>
+                :disabled="!images[selectedImage].canSubmit || isSubmitting">提交</NButton>
             </div>
+
           </div>
         </NScrollbar>
       </NGi>
@@ -60,10 +78,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, Ref } from 'vue'
+import { ref, onMounted, Ref, watchEffect } from 'vue'
 import { NInput, NButton, NGrid, NGi, NScrollbar, useDialog } from 'naive-ui'
 import { Image } from '@/types/index.ts'
-import ImageSelector from '@/views/food-list/ImageSelector.vue' 
+import ImageSelector from '@/views/food-list/ImageSelector.vue'
 import ImageCarousel from '@/views/food-list/ImageCarousel.vue'
 //compoment
 import EditButton from '@/views/food-list/_components/button/EditButton.vue'
@@ -77,66 +95,49 @@ const authStore = useAuthStore();
 const dialog = useDialog()
 const isSubmitting = ref(false);
 
+const totalCalories = ref('-');
+const totalProtein = ref('-');
+const totalLipids = ref('-');
+const totalCarbohydrate = ref('-');
+
+const selectedImage = ref(0)
+const tableData: Ref<any[]> = ref([]);
+  const isLoading = ref(true);
+
 onMounted(async () => {
   try {
     if (authStore.authState.isLoggedIn && authStore.authState.token) {
       const response = await fetchUserImages();
       if (response) {
-        images.value = response.map((img) => ({
+        images.value = response.map((img: { image_id: string }) => ({
           image_id: img.image_id,
           thumbnailUrl: `https://food-ai.efaipd.com/api/images/${img.image_id}/thumbnail`,
           fullImageUrl: `https://food-ai.efaipd.com/api/images/${img.image_id}/view`,
           editable: false,  // 初始不可編輯
           canSubmit: true,   // 初始可以提交
-          formData: createFormData(),
         }));
       }
     }
   } catch (error) {
     console.error('Error fetching images:', error);
+  }finally {
+    isLoading.value = false; // 加载完成
   }
+  
 });
 
 function updateSelectedImage(index: number) {
   selectedImage.value = index;
+  const currentImage = images.value[index];
+  tableData.value = currentImage.formData || []; 
 }
 
-const selectedImage = ref(0)
-
-const foodLabels = []
-const tableData = ref([
-  {
-    food_name: '中式餃子',
-    cooking_method: '水煮',
-    quantity: 8,
-    quantity_name: '個',
-    calories: 170,
-    protein: 7,
-    lipids: 6,
-    carbohydrate: 20
-  },
-]);
-
-function createFormData() {
-  return {
-    food_name: '',
-    cooking_method: '',
-    quantity: 0,
-    quantity_name: '',
-    calories: 0,
-    protein: 0,
-    lipids: 0,
-    carbohydrate: 0
-  };
-}
-
-function enableEditing(formData: any) {
+function enableEditing() {
   const currentImage = images.value[selectedImage.value];
   currentImage.editable = !currentImage.editable;
 }
 
-
-function confirmSubmit(image) {
+function confirmSubmit(image: Image) {
   dialog.success({
     title: '確認提交',
     content: '您確定要提交這個表單嗎？',
@@ -145,11 +146,11 @@ function confirmSubmit(image) {
     onPositiveClick: () => submitForm(image)
   });
 }
-
-async function submitForm(image) {
+async function submitForm(image: Image) {
+  const imageId: string = image.image_id as string;
   isSubmitting.value = true;
   try {
-    const response = await submitImageLabels(image.image_id, image.formData);
+    const response = await submitImageLabels(imageId, image.formData);
     console.log('Response:', response);
   } catch (error) {
     console.error('提交失敗:', error);
@@ -158,10 +159,56 @@ async function submitForm(image) {
   }
 }
 
-
 function handleRecognitionResult(data: any) {
   console.log('Received recognition data:', data);
+
+  if (data.error) {
+    tableData.value = [{
+      '食物(麵、飯、麵包、蔬菜..等等)': '請重新辨識',
+      '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
+      '數量': '',
+      '單位': '',
+      '熱量 (kcal/100g)': '',
+      '蛋白質 (g/100g)': '',
+      '脂質 (g/100g)': '',
+      '碳水化合物 (g/100g)': '',
+    }];
+  } else if (Array.isArray(data)) {
+    // 正常数据处理
+    const formattedData = data.map((item: any) => ({
+      '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
+      '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
+      '數量': item.quantity,
+      '單位': item.quantity_name,
+      '熱量 (kcal/100g)': item.calories,
+      '蛋白質 (g/100g)': item.protein,
+      '脂質 (g/100g)': item.lipids,
+      '碳水化合物 (g/100g)': item.carbohydrate,
+    }));
+    tableData.value = formattedData;
+  } else {
+    // 处理未知错误或数据格式问题
+    tableData.value = [{
+      '食物(麵、飯、麵包、蔬菜..等等)': '請重新辨識',
+      '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
+      '數量': '',
+      '單位': '',
+      '熱量 (kcal/100g)': '',
+      '蛋白質 (g/100g)': '',
+      '脂質 (g/100g)': '',
+      '碳水化合物 (g/100g)': '',
+    }];
+  }
 }
+
+
+watchEffect(() => {
+  totalCalories.value = tableData.value.reduce((total, item) => total + parseFloat(item['熱量 (kcal/100g)'] || 0), 0);
+  totalProtein.value = tableData.value.reduce((total, item) => total + parseFloat(item['蛋白質 (g/100g)'] || 0), 0);
+  totalLipids.value = tableData.value.reduce((total, item) => total + parseFloat(item['脂質 (g/100g)'] || 0), 0);
+  totalCarbohydrate.value = tableData.value.reduce((total, item) => total + parseFloat(item['碳水化合物 (g/100g)'] || 0), 0);
+});
+
 </script>
 
 <style scoped>
