@@ -7,7 +7,7 @@
       </NGi>
       <NGi :span="10">
         <div v-if="isLoading">
-          <p>加载中...</p>
+          <p>圖片資源加载中...</p>
         </div>
         <div v-else-if="images.length > 0">
           <ImageCarousel :images="images.map(image => ({ url: image.fullImageUrl }))" :selectedImage="selectedImage"
