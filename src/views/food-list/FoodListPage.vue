@@ -76,7 +76,7 @@
     </NGrid>
   </NSpace>
 </template>
-
+User
 <script setup lang="ts">
 import { ref, onMounted, Ref, watchEffect } from 'vue'
 import { NInput, NButton, NGrid, NGi, NScrollbar, useDialog } from 'naive-ui'
@@ -146,14 +146,19 @@ function confirmSubmit(image: Image) {
     onPositiveClick: () => submitForm(image)
   });
 }
+import {useMessage,} from 'naive-ui'
+const message = useMessage()
+
 async function submitForm(image: Image) {
   const imageId: string = image.image_id as string;
   isSubmitting.value = true;
   try {
     const response = await submitImageLabels(imageId, image.formData);
     console.log('Response:', response);
+    message.success('資料提交成功');
   } catch (error) {
     console.error('提交失敗:', error);
+    message.error('提交失敗');
   } finally {
     isSubmitting.value = false;
   }
@@ -174,7 +179,6 @@ function handleRecognitionResult(data: any) {
       '碳水化合物 (g/100g)': '',
     }];
   } else if (Array.isArray(data)) {
-    // 正常数据处理
     const formattedData = data.map((item: any) => ({
       '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
       '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
@@ -187,7 +191,6 @@ function handleRecognitionResult(data: any) {
     }));
     tableData.value = formattedData;
   } else {
-    // 处理未知错误或数据格式问题
     tableData.value = [{
       '食物(麵、飯、麵包、蔬菜..等等)': '請重新辨識',
       '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
@@ -200,7 +203,6 @@ function handleRecognitionResult(data: any) {
     }];
   }
 }
-
 
 watchEffect(() => {
   totalCalories.value = tableData.value.reduce((total, item) => total + parseFloat(item['熱量 (kcal/100g)'] || 0), 0);
