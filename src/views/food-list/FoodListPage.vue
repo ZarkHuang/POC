@@ -47,15 +47,15 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(item, index) in tableData" :key="index">
-                  <td v-for="(value, key) in item" :key="key">
-                    <NInput v-if="images[selectedImage].editable" v-model="item[key]" />
-                    <span v-else>{{ value }}</span>
-                  </td>
-                </tr>
                 <tr v-if="tableData.length === 0">
                   <td v-for="n in tableHeaders.length" :key="n">-</td>
-                </tr>
+  </tr>
+  <tr v-else v-for="(item, index) in tableData" :key="index">
+    <td v-for="(value, key) in item" :key="key">
+      <NInput v-if="images[selectedImage].editable" v-model:value="item[key]" />
+      <span v-else>{{ value }}</span>
+    </td>
+  </tr>
                 <tr>
                   <td colspan="4">總計：</td>
                   <td>{{ totalCalories }}</td>
@@ -135,7 +135,13 @@ function updateSelectedImage(index: number) {
 function enableEditing() {
   const currentImage = images.value[selectedImage.value];
   currentImage.editable = !currentImage.editable;
+  console.log("Editing enabled:", currentImage.editable);
+
+  // 強制刷新tableData渲染
+  tableData.value = [...tableData.value];
 }
+
+
 
 function confirmSubmit(image: Image) {
   dialog.success({
@@ -150,10 +156,28 @@ import {useMessage,} from 'naive-ui'
 const message = useMessage()
 
 async function submitForm(image: Image) {
-  const imageId: string = image.image_id as string;
+  const labelData = tableData.value.map(item => ({
+    food_name: item['食物(麵、飯、麵包、蔬菜..等等)'],
+    quantity_name: item['單位'],
+    quantity: parseFloat(item['數量']),
+    cooking_method: item['烹飪方式 (炸、烤、煎、炒、滷...等等)'],
+    calories: parseFloat(item['熱量 (kcal/100g)']),
+    protein: parseFloat(item['蛋白質 (g/100g)']),
+    lipids: parseFloat(item['脂質 (g/100g)']),
+    carbohydrate: parseFloat(item['碳水化合物 (g/100g)'])
+  }));
+
+
+  if (labelData.length === 0 || labelData.some(item => isNaN(item.quantity) || isNaN(item.calories) || isNaN(item.protein) || isNaN(item.lipids) || isNaN(item.carbohydrate))) {
+    message.warning('沒有有效的數據可以提交或部分數據格式不正確。');
+    return; // 如果數據無效或格式不正確，直接返回不執行提交
+  }
+
+  console.log("Sending the following data to API:", labelData);
+  const submissionPayload = { label_data: labelData };
   isSubmitting.value = true;
   try {
-    const response = await submitImageLabels(imageId, image.formData);
+    const response = await submitImageLabels(image.image_id, submissionPayload);
     console.log('Response:', response);
     message.success('資料提交成功');
   } catch (error) {
@@ -163,6 +187,7 @@ async function submitForm(image: Image) {
     isSubmitting.value = false;
   }
 }
+
 
 function handleRecognitionResult(data: any) {
   console.log('Received recognition data:', data);
