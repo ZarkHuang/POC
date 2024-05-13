@@ -5,14 +5,15 @@
     </NButton>
     <div class="image-scroll-container" ref="scrollContainer" @scroll="checkScrollPosition">
       <NGrid cols="1" x-gap="6">
-      <NGi v-for="(image, index) in images" :key="image.url">
-        <NButton :style="getButtonStyle(index)" @click="selectImage(index)" style="padding: 0">
-          <div class="image-container">
-            <img :src="image.url" :alt="'Image ' + (index + 1)" loading="lazy" class="image-preview" />
-          </div>
-        </NButton>
-      </NGi>
-    </NGrid>
+        <NGi v-for="(image, index) in images" :key="image.url">
+          <NButton :class="['image-button', { selected: index === selectedImage }]" @click="selectImage(index)">
+            <div class="image-container">
+              <img :src="image.url" :alt="'Image ' + (index + 1)" loading="lazy" class="image-preview" />
+              <NIcon v-if="image.is_label" size="24" :component="CheckmarkFilled" class="label-icon" />
+            </div>
+          </NButton>
+        </NGi>
+      </NGrid>
     </div>
     <NButton :disabled="atBottom" @click="scrollDown" type="primary" size="large">
       <NIcon size="20" :component="ArrowDown" />
@@ -20,21 +21,21 @@
   </NSpace>
 </template>
 
+
+
 <script setup lang="ts">
 import { ref, defineProps } from 'vue'
 import { NButton, NIcon, NGrid, NGi, NSpace } from 'naive-ui'
-import { ArrowUp, ArrowDown } from '@vicons/carbon'
+import { ArrowUp, ArrowDown , CheckmarkFilled   } from '@vicons/carbon'
 
- 
-const props = defineProps<{
-  images: { url: string }[]  
+defineProps<{
+  images: { url: string, is_label: boolean }[]  
   selectedImage: number 
 }>();
- 
+
 const scrollContainer = ref<HTMLDivElement | null>(null)
 const atTop = ref(true)
 const atBottom = ref(false)
-// const selectImage =()=>{}
 
 const emit = defineEmits(['update:selectedImage']);
 
@@ -63,34 +64,46 @@ function checkScrollPosition() {
   atBottom.value =
     container.scrollTop + container.clientHeight >= container.scrollHeight
 }
-
-function getButtonStyle(index: number) {
-  const isSelected = props.selectedImage === index
-  return {
-    width: isSelected ? '100px' : '80px',
-    height: isSelected ? '100px' : '80px',
-    margin: '8px auto',
-    backgroundColor: isSelected ? '#fff' : '#f0f0f0',
-    opacity: isSelected ? '1.0' : '0.5',
-    filter: isSelected ? 'none' : 'grayscale(100%)',
-    transition: 'all 0.3s ease-in-out',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  }
-}
 </script>
 
+
 <style scoped>
+.image-button {
+  width: 100px;
+  height: 100px;
+  margin: 8px auto;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease-in-out;
+}
+
+.image-button:not(.selected) .image-preview {
+  filter: grayscale(100%);
+  opacity: 0.6
+}
+
+.image-button.selected {
+  width: 120px;
+  height: 120px;
+  background-color: #fff;
+  opacity: 1.0;
+}
+
+.label-icon {
+  position: absolute;
+  color: green;
+  background-color: #fff;
+  border-radius: 50%;
+  z-index: 1;
+}
+
 .image-scroll-container {
   overflow-y: auto;
   height: calc(50vh);
   max-height: 360px;
   width: 100%;
-}
-
-.image-scroll-container.test {
-  width: 200px;
 }
 
 .image-scroll-container::-webkit-scrollbar {

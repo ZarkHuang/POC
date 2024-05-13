@@ -11,7 +11,6 @@
                 </NCarousel>
             </div>
         </NSpin>
-
         <div class="button-container">
             <NButton @click="triggerRecognition" :disabled="clickCounts[selectedImage] >= 3 || isRecognizing" type="primary">圖像辨識</NButton>
         </div>
@@ -63,8 +62,6 @@ async function triggerRecognition() {
 }
 </script>
 
-
-
 <style scoped>
 .carousel-container {
     display: flex;
@@ -79,7 +76,7 @@ async function triggerRecognition() {
 .carousel-image-container {
     position: relative;
     width: 100%;
-    height: calc(100vh - 200px);
+    height: calc(50vh);
     border: 2px solid #dce4ec;
     margin-bottom: 24px;
 }
