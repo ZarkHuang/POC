@@ -18,10 +18,11 @@
     <NButton :disabled="atBottom" @click="scrollDown" type="primary" size="large">
       <NIcon size="20" :component="ArrowDown" />
     </NButton>
+    <NButton :disabled="atTop" @click="scrollToSelected" type="primary" size="large">
+      回到選擇的圖片
+    </NButton>
   </NSpace>
 </template>
-
-
 
 <script setup lang="ts">
 import { ref, defineProps } from 'vue'
@@ -44,6 +45,12 @@ function selectImage(index: any) {
   emit('update:selectedImage', index);
 }
 
+function scrollToSelected() {
+  const selectedImageElement = document.querySelector('.image-button.selected');
+  if (selectedImageElement) {
+    selectedImageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
 
 function scrollUp() {
   if (scrollContainer.value) {
