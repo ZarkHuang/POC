@@ -2,7 +2,7 @@
   <NSpace vertical>
     <NGrid cols="12" x-gap="12">
       <NGi class="image-selector">
-        <ImageSelector :images="images.map(image => ({ url: image.thumbnailUrl }))"
+        <ImageSelector :images="images.map(image => ({ url: image.thumbnailUrl, is_label: image.is_label }))"
           @update:selectedImage="updateSelectedImage" :selectedImage="selectedImage" />
       </NGi>
       <NGi :span="10">
@@ -25,9 +25,14 @@
         </div>
         <NScrollbar>
           <div v-if="selectedImage < images.length" :key="images[selectedImage].image_id" class="form-content">
-            <NGrid cols="1" justify="end" class="form-title-container" style="margin-bottom: 12px; margin-top: -12px">
-              <NGi justify="end">
-                <div style="display: flex; justify-content: flex-end; align-items: center; width: 100%;">
+            <NGrid cols="12" justify="space-between" class="form-title-container" style="align-items: center; margin-bottom: 12px; margin-top: -12px">
+              <NGi :span="3">
+                <NButton @click="addNewRow" type="primary">
+                  新增欄位
+                </NButton>
+              </NGi>
+              <NGi :span="9" justify="end">
+                <div style="display: flex; justify-content: flex-end; align-items: center;">
                   <NH5 class="form-title" style="margin: 0px 16px">圖片 ID：{{ images[selectedImage].image_id }}</NH5>
                   <NH5 class="form-title" style="margin: 0px 16px">名字：王大明</NH5>
                   <NH5 class="form-title" style="margin: 0px 16px">
@@ -69,7 +74,6 @@
               <NButton @click="confirmSubmit(images[selectedImage])"
                 :disabled="!images[selectedImage].canSubmit || isSubmitting">提交</NButton>
             </div>
-
           </div>
         </NScrollbar>
       </NGi>
@@ -100,7 +104,6 @@ const totalCalories = ref('-');
 const totalProtein = ref('-');
 const totalLipids = ref('-');
 const totalCarbohydrate = ref('-');
-
 const selectedImage = ref(0)
 const tableData: Ref<any[]> = ref([]);
 const isLoading = ref(true);
@@ -127,6 +130,21 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
+
+function addNewRow() {
+  const newRow = {
+    '食物(麵、飯、麵包、蔬菜..等等)': '',
+    '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
+    '數量': '0',
+    '單位': '',
+    '熱量 (kcal/100g)': '0',
+    '蛋白質 (g/100g)': '0',
+    '脂質 (g/100g)': '0',
+    '碳水化合物 (g/100g)': '0'
+  };
+  tableData.value.push(newRow);
+}
+
 
 async function fetchLabelHistoryForSelectedImage() {
   if (images.value.length > 0 && selectedImage.value < images.value.length) {
@@ -155,11 +173,6 @@ async function fetchLabelHistoryForSelectedImage() {
     }
   }
 }
-
-
-watchEffect(() => {
-  fetchLabelHistoryForSelectedImage(); // 當選定圖片改變時，重新載入歷史資料
-});
 
 function showNoDataAlert() {
   message.warning('需要有資料才能編輯。');
@@ -195,7 +208,6 @@ function confirmSubmit(image) {
   });
 }
 
-
 async function submitForm(image: Image) {
   const labelData = tableData.value.map(item => ({
     food_name: item['食物(麵、飯、麵包、蔬菜..等等)'],
@@ -228,7 +240,6 @@ async function submitForm(image: Image) {
     isSubmitting.value = false;
   }
 }
-
 
 function handleRecognitionResult(data: any) {
   console.log('Received recognition data:', data);
@@ -269,6 +280,10 @@ function handleRecognitionResult(data: any) {
     }];
   }
 }
+
+watchEffect(() => {
+  fetchLabelHistoryForSelectedImage(); // 當選定圖片改變時，重新載入歷史資料
+});
 
 watchEffect(() => {
   totalCalories.value = tableData.value.reduce((total, item) => total + parseFloat(item['熱量 (kcal/100g)'] || 0), 0);

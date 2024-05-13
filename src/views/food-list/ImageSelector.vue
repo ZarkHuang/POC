@@ -28,7 +28,7 @@ import { ref, defineProps } from 'vue'
 import { NButton, NIcon, NGrid, NGi, NSpace } from 'naive-ui'
 import { ArrowUp, ArrowDown , CheckmarkFilled   } from '@vicons/carbon'
 
-defineProps<{
+const props = defineProps<{
   images: { url: string, is_label: boolean }[]  
   selectedImage: number 
 }>();
@@ -40,8 +40,10 @@ const atBottom = ref(false)
 const emit = defineEmits(['update:selectedImage']);
 
 function selectImage(index: any) {
+  console.log("Selected image has label:", props.images[index].is_label);
   emit('update:selectedImage', index);
 }
+
 
 function scrollUp() {
   if (scrollContainer.value) {
@@ -107,7 +109,7 @@ function checkScrollPosition() {
 }
 
 .image-scroll-container::-webkit-scrollbar {
-  display: none;
+  /* display: none; */
 }
 
 .image-container {
