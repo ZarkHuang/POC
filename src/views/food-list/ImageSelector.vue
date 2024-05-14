@@ -80,8 +80,8 @@ function checkScrollPosition() {
 
 <style scoped>
 .image-button {
-  width: 100px;
-  height: 100px;
+  width: 200px;
+  height: 120px;
   margin: 8px auto;
   background-color: #f0f0f0;
   display: flex;
@@ -96,7 +96,7 @@ function checkScrollPosition() {
 }
 
 .image-button.selected {
-  width: 120px;
+  width: 220px;
   height: 120px;
   background-color: #fff;
   opacity: 1.0;
@@ -132,8 +132,8 @@ function checkScrollPosition() {
 }
 
 .image-preview {
-  width: 80px;
-  height: 80px;
+  width: 180px;
+  height: 100px;
   object-fit: cover;
 }
 </style>

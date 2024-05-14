@@ -1,23 +1,17 @@
 <template>
   <NSpace vertical>
     <NGrid cols="12" x-gap="12">
-      <NGi class="image-selector">
-        <ImageSelector 
-          :images="images.map(image => ({ url: image.thumbnailUrl, is_label: image.is_label! }))"
-          @update:selectedImage="updateSelectedImage" 
-          :selectedImage="selectedImage" 
-          :isRecognizing="isRecognizing" />
+      <NGi :span="2">
+        <ImageSelector :images="images.map(image => ({ url: image.thumbnailUrl, is_label: image.is_label! }))"
+          @update:selectedImage="updateSelectedImage" :selectedImage="selectedImage" :isRecognizing="isRecognizing" />
       </NGi>
       <NGi :span="10">
         <div v-if="isLoading">
           <p>圖片資源加载中...</p>
         </div>
         <div v-else-if="images.length > 0">
-          <ImageCarousel 
-            :images="images.map(image => ({ url: image.fullImageUrl }))" 
-            :selectedImage="selectedImage"
-            @recognitionResult="handleRecognitionResult" 
-            @update:recognizing="isRecognizing = $event"
+          <ImageCarousel :image="images[selectedImage]?.fullImageUrl || ''" :selectedImage="selectedImage"
+            @recognitionResult="handleRecognitionResult" @update:recognizing="isRecognizing = $event"
             @update:selectedImage="updateSelectedImage" />
         </div>
         <div v-else>
@@ -31,7 +25,8 @@
           <PageTitle>辨識結果</PageTitle>
         </div>
         <NScrollbar>
-          <div v-if="selectedImage < images.length" :key="images[selectedImage].image_id" class="form-content">
+          <div v-if="selectedImage < images.length && images[selectedImage]" :key="images[selectedImage].image_id"
+            class="form-content">
             <NGrid cols="12" justify="space-between" class="form-title-container"
               style="align-items: center; margin-bottom: 12px; margin-top: -12px">
               <NGi :span="3">
@@ -45,11 +40,8 @@
                     時間：
                     <NTime :time="Date.now()" type="date" />
                   </NH5>
-                  <EditButton 
-                    :isEditing="images[selectedImage].editable" 
-                    :isDisabled="!images[selectedImage].canSubmit"
-                    :hasData="tableData.length > 0" 
-                    @update:isEditing="handleEditingChange($event, selectedImage)"
+                  <EditButton :isEditing="images[selectedImage].editable" :isDisabled="!images[selectedImage].canSubmit"
+                    :hasData="tableData.length > 0" @update:isEditing="handleEditingChange($event, selectedImage)"
                     @noData="showNoDataAlert" />
                 </div>
               </NGi>
@@ -66,7 +58,7 @@
                 </tr>
                 <tr v-else v-for="(item, index) in tableData" :key="index">
                   <td v-for="(value, key) in item" :key="key">
-                    <NInput v-if="images[selectedImage].editable" v-model:value="item[key]" />
+                    <NInput v-if="images[selectedImage].editable" v-model:value="tableData[index][key]" />
                     <span v-else>{{ value }}</span>
                   </td>
                   <td>
@@ -87,8 +79,7 @@
               </tbody>
             </NTable>
             <div style="display: flex; justify-content: end; padding: 10px 0;">
-              <NButton 
-                @click="confirmSubmit(images[selectedImage])"
+              <NButton @click="confirmSubmit(images[selectedImage])"
                 :disabled="!images[selectedImage].canSubmit || isSubmitting">提交</NButton>
             </div>
           </div>
@@ -121,10 +112,9 @@ const totalCalories = ref('-');
 const totalProtein = ref('-');
 const totalLipids = ref('-');
 const totalCarbohydrate = ref('-');
-const selectedImage = ref(0)
+const selectedImage = ref(0); // 將初始值設為 0
 const tableData: Ref<any[]> = ref([]);
 const isLoading = ref(true);
-
 const isRecognizing = ref(false);
 
 function removeRow(index: number) {
@@ -170,7 +160,7 @@ function addNewRow() {
 }
 
 async function fetchLabelHistoryForSelectedImage() {
-  if (images.value.length > 0 && selectedImage.value < images.value.length) {
+  if (selectedImage.value !== null && images.value.length > 0 && selectedImage.value < images.value.length) {
     const currentImage = images.value[selectedImage.value];
     try {
       const historyData = await fetchImageLabelHistory(currentImage.image_id);
@@ -179,12 +169,12 @@ async function fetchLabelHistoryForSelectedImage() {
         const formattedData = historyData.map((item: LabelHistoryItem) => ({
           '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
           '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
-          '數量': String(item.quantity),
+          '數量': String(item.quantity), // 將數字轉換為字符串
           '單位': item.quantity_name,
-          '熱量 (kcal/100g)': String(item.calories),
-          '蛋白質 (g/100g)': String(item.protein),
-          '脂質 (g/100g)': String(item.lipids),
-          '碳水化合物 (g/100g)': String(item.carbohydrate),
+          '熱量 (kcal/100g)': String(item.calories), // 將數字轉換為字符串
+          '蛋白質 (g/100g)': String(item.protein), // 將數字轉換為字符串
+          '脂質 (g/100g)': String(item.lipids), // 將數字轉換為字符串
+          '碳水化合物 (g/100g)': String(item.carbohydrate), // 將數字轉換為字符串
           '創建時間': String(item.created_at),
         }));
         tableData.value = formattedData;
@@ -203,8 +193,7 @@ function showNoDataAlert() {
 
 function updateSelectedImage(index: number) {
   selectedImage.value = index;
-  const currentImage = images.value[index];
-  tableData.value = Array.isArray(currentImage.formData) ? currentImage.formData : [];
+  fetchLabelHistoryForSelectedImage();
 }
 
 function handleEditingChange(newEditingState: boolean, index: number) {
@@ -218,6 +207,10 @@ function handleEditingChange(newEditingState: boolean, index: number) {
 }
 
 function confirmSubmit(image: Image) {
+  if (image.editable) {
+    message.error('請先確認編輯後再提交。');
+    return;
+  }
   if ('editConfirmed' in image && !image.editConfirmed) {
     message.error('請先確認編輯後再提交。');
     return;
@@ -226,6 +219,7 @@ function confirmSubmit(image: Image) {
     message.error('沒有有效的數據可以提交。請確保表單已填寫。');
     return;
   }
+
   dialog.success({
     title: '確認提交',
     content: '您確定要提交這個表單嗎？',
@@ -246,7 +240,6 @@ async function submitForm(image: Image) {
     lipids: parseFloat(item['脂質 (g/100g)']),
     carbohydrate: parseFloat(item['碳水化合物 (g/100g)'])
   }));
-
 
   if (labelData.length === 0 || labelData.some(item => isNaN(item.quantity) || isNaN(item.calories) || isNaN(item.protein) || isNaN(item.lipids) || isNaN(item.carbohydrate))) {
     message.warning('沒有有效的數據可以提交或部分數據格式不正確。');
@@ -288,12 +281,12 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
     const formattedData = response.map((item: any) => ({
       '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
       '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
-      '數量': item.quantity,
+      '數量': String(item.quantity), // 確保數值轉為字符串
       '單位': item.quantity_name,
-      '熱量 (kcal/100g)': item.calories,
-      '蛋白質 (g/100g)': item.protein,
-      '脂質 (g/100g)': item.lipids,
-      '碳水化合物 (g/100g)': item.carbohydrate,
+      '熱量 (kcal/100g)': String(item.calories), // 確保數值轉為字符串
+      '蛋白質 (g/100g)': String(item.protein), // 確保數值轉為字符串
+      '脂質 (g/100g)': String(item.lipids), // 確保數值轉為字符串
+      '碳水化合物 (g/100g)': String(item.carbohydrate), // 確保數值轉為字符串
       '創建時間': ''
     }));
     tableData.value = formattedData;
@@ -324,8 +317,6 @@ watchEffect(() => {
   totalCarbohydrate.value = tableData.value.reduce((total, item) => total + parseFloat(item['碳水化合物 (g/100g)'] || 0), 0);
 });
 </script>
-
-
 
 
 <style scoped>

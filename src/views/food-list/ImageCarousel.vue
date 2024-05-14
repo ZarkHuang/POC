@@ -1,14 +1,10 @@
 <template>
     <div class="carousel-container">
         <NSpin :show="isRecognizing">
-            <div class="carousel-image-container" v-if="images && images.length > 0">
-                <NCarousel :current-index="selectedImage" :show-dots="false" trigger="click" @update:currentIndex="updateCurrentIndex">
-                    <NCarouselItem v-for="(image, index) in images" :key="index">
-                        <div>
-                            <img :src="image.url" class="carousel-image" loading="lazy" alt="Carousel Image" />
-                        </div>
-                    </NCarouselItem>
-                </NCarousel>
+            <div class="carousel-image-container" v-if="image">
+                <div>
+                    <img :src="image" class="carousel-image" loading="lazy" alt="Carousel Image" />
+                </div>
             </div>
         </NSpin>
         <div class="button-container">
@@ -19,15 +15,15 @@
 
 <script setup lang="ts">
 import { defineProps, ref } from 'vue';
-import { NCarousel, NCarouselItem, NButton, NSpin } from 'naive-ui';
+import { NButton, NSpin } from 'naive-ui';
 import { recognizeImage } from '@/services/api/report';
 
 const props = defineProps<{
-    images: { url: string }[];
+    image: string;
     selectedImage: number;
 }>();
 
-const emit = defineEmits(['recognitionResult', 'update:selectedImage', 'update:recognizing']);
+const emit = defineEmits(['recognitionResult', 'update:recognizing']);
 const clickCounts = ref<Record<number, number>>({});
 const isRecognizing = ref(false);
 
@@ -37,17 +33,13 @@ function extractImageId(url: string) {
     return imageId;
 }
 
-function updateCurrentIndex(index: number) {
-    emit('update:selectedImage', index);
-}
-
 async function triggerRecognition() {
     if (!(props.selectedImage in clickCounts.value)) {
         clickCounts.value[props.selectedImage] = 0;
     }
     if (clickCounts.value[props.selectedImage] < 3) {
         clickCounts.value[props.selectedImage]++;
-        const imageUrl = props.images[props.selectedImage].url;
+        const imageUrl = props.image;
         const imageId = extractImageId(imageUrl);
         if (imageId) {
             try {
