@@ -27,7 +27,7 @@ const props = defineProps<{
     selectedImage: number;
 }>();
 
-const emit = defineEmits(['recognitionResult', 'update:selectedImage']);
+const emit = defineEmits(['recognitionResult', 'update:selectedImage', 'update:recognizing']);
 const clickCounts = ref<Record<number, number>>({});
 const isRecognizing = ref(false);
 

@@ -2,16 +2,23 @@
   <NSpace vertical>
     <NGrid cols="12" x-gap="12">
       <NGi class="image-selector">
-        <ImageSelector :images="images.map(image => ({ url: image.thumbnailUrl, is_label: image.is_label }))"
-          @update:selectedImage="updateSelectedImage" :selectedImage="selectedImage" :isRecognizing="isRecognizing" />
+        <ImageSelector 
+          :images="images.map(image => ({ url: image.thumbnailUrl, is_label: image.is_label! }))"
+          @update:selectedImage="updateSelectedImage" 
+          :selectedImage="selectedImage" 
+          :isRecognizing="isRecognizing" />
       </NGi>
       <NGi :span="10">
         <div v-if="isLoading">
           <p>圖片資源加载中...</p>
         </div>
         <div v-else-if="images.length > 0">
-          <ImageCarousel :images="images.map(image => ({ url: image.fullImageUrl }))" :selectedImage="selectedImage"
-            @recognitionResult="handleRecognitionResult" @update:recognizing="isRecognizing = $event" />
+          <ImageCarousel 
+            :images="images.map(image => ({ url: image.fullImageUrl }))" 
+            :selectedImage="selectedImage"
+            @recognitionResult="handleRecognitionResult" 
+            @update:recognizing="isRecognizing = $event"
+            @update:selectedImage="updateSelectedImage" />
         </div>
         <div v-else>
           <p>沒有任何資料</p>
@@ -34,14 +41,15 @@
               </NGi>
               <NGi :span="9" justify="end">
                 <div style="display: flex; justify-content: flex-end; align-items: center;">
-                  <!-- <NH5 class="form-title" style="margin: 0px 16px">圖片 ID：{{ images[selectedImage].image_id }}</NH5> -->
-                  <!-- <NH5 class="form-title" style="margin: 0px 16px">名字：王大明</NH5> -->
                   <NH5 class="form-title" style="margin: 0px 16px">
                     時間：
                     <NTime :time="Date.now()" type="date" />
                   </NH5>
-                  <EditButton :isEditing="images[selectedImage].editable" :isDisabled="!images[selectedImage].canSubmit"
-                    :hasData="tableData.length > 0" @update:isEditing="handleEditingChange($event, selectedImage)"
+                  <EditButton 
+                    :isEditing="images[selectedImage].editable" 
+                    :isDisabled="!images[selectedImage].canSubmit"
+                    :hasData="tableData.length > 0" 
+                    @update:isEditing="handleEditingChange($event, selectedImage)"
                     @noData="showNoDataAlert" />
                 </div>
               </NGi>
@@ -79,7 +87,8 @@
               </tbody>
             </NTable>
             <div style="display: flex; justify-content: end; padding: 10px 0;">
-              <NButton @click="confirmSubmit(images[selectedImage])"
+              <NButton 
+                @click="confirmSubmit(images[selectedImage])"
                 :disabled="!images[selectedImage].canSubmit || isSubmitting">提交</NButton>
             </div>
           </div>
@@ -92,7 +101,7 @@
 <script setup lang="ts">
 import { ref, onMounted, Ref, watchEffect } from 'vue'
 import { NInput, NButton, NGrid, NGi, NScrollbar, useDialog } from 'naive-ui'
-import { Image } from '@/types/index.ts'
+import { Image, LabelHistoryItem } from '@/types/index.ts'
 import ImageSelector from '@/views/food-list/ImageSelector.vue'
 import ImageCarousel from '@/views/food-list/ImageCarousel.vue'
 //compoment
@@ -122,13 +131,12 @@ function removeRow(index: number) {
   tableData.value.splice(index, 1);
 }
 
-
 onMounted(async () => {
   try {
     if (authStore.authState.isLoggedIn && authStore.authState.token) {
       const response = await fetchUserImages();
       if (response) {
-        images.value = response.map((img: { image_id: string }) => ({
+        images.value = response.map((img: Image) => ({
           image_id: img.image_id,
           is_label: img.is_label,
           thumbnailUrl: `https://food-ai.efaipd.com/api/images/${img.image_id}/thumbnail`,
@@ -156,7 +164,7 @@ function addNewRow() {
     '蛋白質 (g/100g)': '0',
     '脂質 (g/100g)': '0',
     '碳水化合物 (g/100g)': '0',
-    '提交時間':''
+    '提交時間': ''
   };
   tableData.value.push(newRow);
 }
@@ -168,7 +176,7 @@ async function fetchLabelHistoryForSelectedImage() {
       const historyData = await fetchImageLabelHistory(currentImage.image_id);
       if (historyData && historyData.length > 0) {
         // 格式化接收到的歷史數據
-        const formattedData = historyData.map(item => ({
+        const formattedData = historyData.map((item: LabelHistoryItem) => ({
           '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
           '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
           '數量': String(item.quantity),
@@ -181,7 +189,6 @@ async function fetchLabelHistoryForSelectedImage() {
         }));
         tableData.value = formattedData;
       } else {
-        // 沒有歷史數據時重置表格數據
         tableData.value = [];
       }
     } catch (error) {
@@ -197,17 +204,21 @@ function showNoDataAlert() {
 function updateSelectedImage(index: number) {
   selectedImage.value = index;
   const currentImage = images.value[index];
-  tableData.value = currentImage.formData || [];
+  tableData.value = Array.isArray(currentImage.formData) ? currentImage.formData : [];
 }
 
-function handleEditingChange(newEditingState, index) {
-  const currentImage = images.value[index];
-  currentImage.editable = newEditingState;
-  currentImage.editConfirmed = !newEditingState;
+function handleEditingChange(newEditingState: boolean, index: number) {
+  const currentImage: Image | undefined = images.value[index];
+  if (currentImage) {
+    currentImage.editable = newEditingState;
+    if ('editConfirmed' in currentImage) {
+      currentImage.editConfirmed = !newEditingState;
+    }
+  }
 }
 
-function confirmSubmit(image) {
-  if (!image.editConfirmed) {
+function confirmSubmit(image: Image) {
+  if ('editConfirmed' in image && !image.editConfirmed) {
     message.error('請先確認編輯後再提交。');
     return;
   }
@@ -271,7 +282,7 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
       '蛋白質 (g/100g)': '',
       '脂質 (g/100g)': '',
       '碳水化合物 (g/100g)': '',
-      '創建時間':''
+      '創建時間': ''
     }];
   } else if (Array.isArray(response)) {
     const formattedData = response.map((item: any) => ({
@@ -283,7 +294,7 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
       '蛋白質 (g/100g)': item.protein,
       '脂質 (g/100g)': item.lipids,
       '碳水化合物 (g/100g)': item.carbohydrate,
-      '創建時間':''
+      '創建時間': ''
     }));
     tableData.value = formattedData;
     images.value[selectedIndex].is_label = true;
@@ -297,7 +308,7 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
       '蛋白質 (g/100g)': '',
       '脂質 (g/100g)': '',
       '碳水化合物 (g/100g)': '',
-      '創建時間':''
+      '創建時間': ''
     }];
   }
 }
@@ -313,6 +324,8 @@ watchEffect(() => {
   totalCarbohydrate.value = tableData.value.reduce((total, item) => total + parseFloat(item['碳水化合物 (g/100g)'] || 0), 0);
 });
 </script>
+
+
 
 
 <style scoped>
