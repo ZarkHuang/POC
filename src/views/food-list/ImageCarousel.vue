@@ -50,10 +50,10 @@ async function triggerRecognition() {
                 isRecognizing.value = true;  
                 const response = await recognizeImage(imageId);
                 console.log(response);
-                emit('recognitionResult', response);
+                emit('recognitionResult', { response, selectedIndex: props.selectedImage });
             } catch (error) {
                 console.error('API call failed:', error);
-                emit('recognitionResult', { error: true });
+                emit('recognitionResult', { error: true, selectedIndex: props.selectedImage });
             } finally {
                 isRecognizing.value = false;
             }

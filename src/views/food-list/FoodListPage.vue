@@ -145,7 +145,6 @@ function addNewRow() {
   tableData.value.push(newRow);
 }
 
-
 async function fetchLabelHistoryForSelectedImage() {
   if (images.value.length > 0 && selectedImage.value < images.value.length) {
     const currentImage = images.value[selectedImage.value];
@@ -232,6 +231,7 @@ async function submitForm(image: Image) {
   try {
     const response = await submitImageLabels(image.image_id, submissionPayload);
     console.log('Response:', response);
+    fetchLabelHistoryForSelectedImage();
     message.success('資料提交成功');
   } catch (error) {
     console.error('提交失敗:', error);
@@ -241,10 +241,10 @@ async function submitForm(image: Image) {
   }
 }
 
-function handleRecognitionResult(data: any) {
-  console.log('Received recognition data:', data);
+function handleRecognitionResult({ response, selectedIndex }: { response: any, selectedIndex: number }) {
+  console.log('Received recognition data:', response);
 
-  if (data.error) {
+  if (response.error) {
     tableData.value = [{
       '食物(麵、飯、麵包、蔬菜..等等)': '請重新辨識',
       '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
@@ -255,8 +255,8 @@ function handleRecognitionResult(data: any) {
       '脂質 (g/100g)': '',
       '碳水化合物 (g/100g)': '',
     }];
-  } else if (Array.isArray(data)) {
-    const formattedData = data.map((item: any) => ({
+  } else if (Array.isArray(response)) {
+    const formattedData = response.map((item: any) => ({
       '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
       '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
       '數量': item.quantity,
@@ -267,6 +267,8 @@ function handleRecognitionResult(data: any) {
       '碳水化合物 (g/100g)': item.carbohydrate,
     }));
     tableData.value = formattedData;
+    // 更新圖片的標籤狀態
+    images.value[selectedIndex].is_label = true;
   } else {
     tableData.value = [{
       '食物(麵、飯、麵包、蔬菜..等等)': '請重新辨識',
@@ -291,8 +293,8 @@ watchEffect(() => {
   totalLipids.value = tableData.value.reduce((total, item) => total + parseFloat(item['脂質 (g/100g)'] || 0), 0);
   totalCarbohydrate.value = tableData.value.reduce((total, item) => total + parseFloat(item['碳水化合物 (g/100g)'] || 0), 0);
 });
-
 </script>
+
 
 <style scoped>
 .form-header {
