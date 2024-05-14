@@ -1,9 +1,6 @@
-import {
-  createRouter,
-  createWebHistory,
-  type RouterOptions,
-  type RouteRecordRaw,
-} from 'vue-router'
+// router/index.ts
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
 import ContentPageLayout from '@/layouts/ContentPageLayout.vue'
 import AuthPageLayout from '@/layouts/AuthPageLayout.vue'
 import SignInPage from '@/views/auth/SignInPage.vue'
@@ -28,13 +25,30 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/food-list',
+    redirect: '/sign-in',
   },
 ]
 
-const routerOptions: RouterOptions = {
+const router = createRouter({
   history: createWebHistory(),
   routes,
-}
+})
 
-export const router = createRouter(routerOptions)
+router.beforeEach((to, _from, next) => {
+  const authStore = useAuthStore();
+
+  console.log('Routing:', to.name, 'Logged in:', authStore.authState.isLoggedIn);
+
+  if (!authStore.authState.isLoggedIn && to.name !== 'sign-in') {
+    console.log('Redirecting to sign-in');
+    next({ name: 'sign-in' });
+  } else if (authStore.authState.isLoggedIn && to.name === 'sign-in') {
+    console.log('Redirecting to food list');
+    next({ name: 'food-list' });
+  } else {
+    next();
+  }
+});
+
+
+export default router

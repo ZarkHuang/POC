@@ -19,7 +19,6 @@ type TesterType = {
 export interface SelectionData {
   id: string
   imageUrl: string
-  originalImageUrl: string
   corners: {
     origTL: { x: number; y: number }
     origTR: { x: number; y: number }
@@ -27,35 +26,12 @@ export interface SelectionData {
     origBR: { x: number; y: number }
   }
 }
-
-interface FormData {
-  [key: string]: string | null
-}
-
 interface HistoryItem {
-  id: string
-  label: string
-  imageUrl: string
-  originalImageUrl: string
-  timestamp: number
+  id: string;
+  label: string;
+  data: FormData;
+  imageUrl: string | undefined;
+  timestamp: number;
+  originalImageUrl?: string;
 }
 
-interface FormInstance {
-  id: string
-  data: FormData
-  editable: boolean
-  label?: string
-  labelIndex: number
-  imageUrl: string
-  originalImageUrl?: string
-  isCustom: boolean
-  canSubmit: boolean
-}
-
-export interface HistoryItem {
-  id: string
-  label: string
-  data: FormData
-  imageUrl: string
-  timestamp: number
-}

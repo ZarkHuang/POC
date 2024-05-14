@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
-import type {
-  FormInst,
-  FormItemRule,
-  FormRules,
-  FormValidationError,
+import { useAdminLogin } from '@/services/api'
+import {
+useMessage,
+  type FormInst,
+  type FormRules,
+  type FormValidationError,
 } from 'naive-ui'
+import { useRouter } from 'vue-router';
 
 type FormData = {
-  email: string
+  acc: string // 使用 `acc` 作為帳號
   password: string
   remember: boolean
 }
@@ -18,58 +21,70 @@ const message = useMessage()
 const router = useRouter()
 const formRef = ref<FormInst | null>(null)
 const formData = ref<FormData>({
-  email: 'admin@mail.com',
-  password: 'admin',
+  acc: '', // 預設值
+  password: '',
   remember: false,
 })
 const rules: FormRules = {
-  email: [
+  acc: [
     {
       required: true,
-      validator: (_: FormItemRule, value: string) => {
-        const regexp = new RegExp(/^[\w-.]+@([\w-]+.)+[\w-]{2,4}$/)
-
-        if (!value) {
-          return new Error('Email is required')
-        } else if (!regexp.test(value)) {
-          return new Error('Invalid email')
-        }
-
-        return true
-      },
+      message: '帳號是必填項',
       trigger: ['blur', 'input'],
     },
   ],
   password: [
     {
       required: true,
-      message: 'Password is required',
+      message: '密碼是必填項',
       trigger: ['blur', 'input'],
     },
   ],
 }
 
+// 使用 useAdminLogin 來創建 mutation
+const loginMutation = useAdminLogin()
+
 function handleSignInClick(e: MouseEvent) {
-  e.preventDefault()
+  e.preventDefault();
 
   formRef.value?.validate((errors: Array<FormValidationError> | undefined) => {
     if (!errors) {
-      authStore.setLoginStatus(true)
-      message.success('登入成功')
-      router.push('/food-ing')
+      loginMutation.mutate(
+        {
+          data: {
+            acc: formData.value.acc,
+            pwd: formData.value.password,
+          },
+        },
+        {
+          onSuccess: (response: { access_token: any; }) => {
+            // 登录成功，存储令牌等操作
+            const token = response.access_token;
+            authStore.setLoginStatus(true, token);
+            message.success('登入成功');
+            router.push({ name: 'food-list' });
+          },
+          onError: (error: any) => {
+            const errorMessage = error?.response?.data?.error_desc || "帳號或密碼錯誤";
+            message.error(`登入失敗：${errorMessage}`);
+          },
+        },
+      );
     } else {
       errors.forEach((error) => {
-        message.error(error?.[0]?.message ?? '')
-      })
+        message.error(error?.[0]?.message ?? "表單驗證錯誤");
+      });
     }
-  })
+  });
 }
+
 </script>
 
 <template>
   <NForm ref="formRef" :model="formData" :rules="rules">
-    <NFormItem label="電子郵件" path="email">
-      <NInput v-model:value="formData.email" clearable autofocus />
+    <NFormItem label="帳號" path="acc">
+      <NInput v-model:value="formData.acc" clearable autofocus />
     </NFormItem>
 
     <NFormItem label="密碼" path="password">

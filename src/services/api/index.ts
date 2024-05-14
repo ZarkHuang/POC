@@ -1,1 +1,2 @@
-export * from './tester'
+export * from './admin'
+export * from './report'

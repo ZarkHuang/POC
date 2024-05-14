@@ -1,24 +1,28 @@
 <template>
-  <NButton :disabled="isDisabled" @click="enableEditing">
-    <NIcon :component="Edit" />
+  <NButton :disabled="isDisabled || !hasData" @click="toggleEditing">
+    <NIcon :component="isEditing ? Checkmark : Edit" />
   </NButton>
 </template>
 
-<script setup lang="ts">
-import { NButton, NIcon } from 'naive-ui'
-import { Edit } from '@vicons/carbon'
-import { defineProps, defineEmits } from 'vue'
+<script setup>
+import { defineProps, defineEmits } from 'vue';
+import { NButton, NIcon } from 'naive-ui';
+import { Checkmark, Edit } from '@vicons/carbon';
 
 const props = defineProps({
-  form: Object,
+  isEditing: Boolean,
   isDisabled: Boolean,
-})
+  hasData: Boolean  // 新增prop來判斷是否有資料
+});
 
-const emit = defineEmits(['edit'])
+const emit = defineEmits(['update:isEditing']);
 
-function enableEditing() {
-  if (!props.isDisabled) {
-    emit('edit', props.form)
+function toggleEditing() {
+  if (!props.hasData) {
+    // 如果沒有資料，顯示提示
+    emit('noData');
+  } else if (!props.isDisabled) {
+    emit('update:isEditing', !props.isEditing);
   }
 }
 </script>

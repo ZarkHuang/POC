@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import { router } from '@/router'
+import router from '@/router' // 注意这里的导入方式修改了
 import { createPinia } from 'pinia'
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { vueQueryPluginOptions } from '@/libs/vue-query'

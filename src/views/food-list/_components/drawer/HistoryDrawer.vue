@@ -6,7 +6,6 @@
         v-for="(entry, index) in historyData"
         :key="index"
         class="history-item"
-        @click="selectHistoryItem(entry)"
       >
         <div v-if="entry.imageUrl">
           <img
@@ -43,7 +42,7 @@
 
 <script setup lang="ts">
 import { ref, watch, defineProps, defineEmits } from 'vue'
-import { NDrawer, NIcon } from 'naive-ui'
+import { NDrawer, NIcon, useDialog } from 'naive-ui'
 import { CheckmarkFilled, Misuse } from '@vicons/carbon'
 import { NoImage } from '@vicons/carbon'
 import { HistoryItem } from '@/global'
@@ -55,7 +54,7 @@ interface DrawerProps {
 
 const props = defineProps<DrawerProps>()
 const drawerVisible = ref(props.modelValue)
-const emit = defineEmits(['update:modelValue', 'remove', 'select-history-item'])
+const emit = defineEmits(['update:modelValue', 'remove'])
 const hover = ref<number | null>(null)
 
 watch(
@@ -81,10 +80,6 @@ function confirmRemoveForm(formId: string) {
     },
   })
 }
-
-function selectHistoryItem(item: any) {
-  emit('select-history-item', item)
-}
 </script>
 
 <style scoped>
@@ -99,7 +94,6 @@ function selectHistoryItem(item: any) {
   overflow-y: auto;
   max-height: 80vh;
   padding: 0 20px;
-  cursor: pointer;
 }
 
 .history-item {

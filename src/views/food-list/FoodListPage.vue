@@ -1,99 +1,86 @@
 <template>
   <NSpace vertical>
-    <NGrid cols="3" x-gap="12">
-      <NGi :span="1">
-        <ImagePreview
-          ref="imagePreviewRef"
-          @selection-saved="addFormWithData"
-          @selection-removed="handleSelectionRemoved"
-        />
-      </NGi>
+    <NGrid cols="12" x-gap="12">
       <NGi :span="2">
+        <ImageSelector :images="images.map(image => ({ url: image.thumbnailUrl, is_label: image.is_label! }))"
+          @update:selectedImage="updateSelectedImage" :selectedImage="selectedImage" :isRecognizing="isRecognizing" />
+      </NGi>
+      <NGi :span="10">
+        <div v-if="isLoading">
+          <p>圖片資源加载中...</p>
+        </div>
+        <div v-else-if="images.length > 0">
+          <ImageCarousel :image="images[selectedImage]?.fullImageUrl || ''" :selectedImage="selectedImage"
+            @recognitionResult="handleRecognitionResult" @update:recognizing="isRecognizing = $event"
+            @update:selectedImage="updateSelectedImage" />
+        </div>
+        <div v-else>
+          <p>沒有任何資料</p>
+        </div>
+      </NGi>
+      <!-- 表單區域 -->
+      <NGi :span="12">
+        <NDivider />
         <div class="form-header">
           <PageTitle>辨識結果</PageTitle>
-          <div class="button-group">
-            <NButton @click="addForm" style="margin-right: 10px"
-              >新增表單</NButton
-            >
-            <NButton type="primary" @click="toggleDrawer">歷史紀錄</NButton>
-          </div>
-          <HistoryDrawer
-            v-model="drawerVisible"
-            :historyData="history"
-            @remove="handleRemoveForm"
-            @select-history-item="handleHistorySelect"
-          />
         </div>
-        <NScrollbar style="max-height: calc(100vh - 168px)">
-          <div v-for="form in forms" :key="form.id" class="form-content">
-            <NGrid
-              cols="3"
-              justify="end"
-              class="form-title-container"
-              style="margin-bottom: 12px; margin-top: -12px"
-            >
-              <NGi>
-                <div class="form-title-container">
-                  <div v-if="form.isCustom" class="default-icon-container">
-                    <NIcon size="20" :component="NoImage" />
-                  </div>
-                  <img
-                    v-else
-                    :src="form.imageUrl"
-                    alt="Selected Image"
-                    class="form-image-thumbnail"
-                  />
-                  <NH5 class="form-title">{{
-                    form.label || `#${form.labelIndex}`
-                  }}</NH5>
-                </div>
+        <NScrollbar>
+          <div v-if="selectedImage < images.length && images[selectedImage]" :key="images[selectedImage].image_id"
+            class="form-content">
+            <NGrid cols="12" justify="space-between" class="form-title-container"
+              style="align-items: center; margin-bottom: 12px; margin-top: -12px">
+              <NGi :span="3">
+                <NButton @click="addNewRow" type="primary">
+                  新增欄位
+                </NButton>
               </NGi>
-              <NGi :span="2">
-                <div
-                  style="
-                    display: flex;
-                    justify-content: flex-end;
-                    align-items: center;
-                  "
-                >
-                  <NH5 class="form-title" style="margin: 0px 16px"
-                    >名字：王大明</NH5
-                  >
-                  <NH5 class="form-title" style="margin: 0px 16px"
-                    >時間：
+              <NGi :span="9" justify="end">
+                <div style="display: flex; justify-content: flex-end; align-items: center;">
+                  <NH5 class="form-title" style="margin: 0px 16px">
+                    時間：
                     <NTime :time="Date.now()" type="date" />
                   </NH5>
-                  <EditButton
-                    type="primary"
-                    ghost
-                    :form="form"
-                    @edit="enableEditing"
-                    :isDisabled="isSubmitting"
-                  />
+                  <EditButton :isEditing="images[selectedImage].editable" :isDisabled="!images[selectedImage].canSubmit"
+                    :hasData="tableData.length > 0" @update:isEditing="handleEditingChange($event, selectedImage)"
+                    @noData="showNoDataAlert" />
                 </div>
               </NGi>
             </NGrid>
-            <NForm ref="formRef" :model="form.data" class="form-row">
-              <div v-for="item in formItems" :key="item.path" class="form-item">
-                <label class="form-label">{{ item.label }}</label>
-                <NInput
-                  class="form-input"
-                  :disabled="!form.editable"
-                  v-model:value="form.data[item.path]"
-                />
-              </div>
-            </NForm>
-
-            <div style="display: flex; justify-content: end">
-              <NButton
-                @click="confirmSubmit(form)"
-                :disabled="!form.canSubmit"
-                style="margin-right: 10px"
-                >提交</NButton
-              >
-              <NButton type="error" @click="confirmRemoveForm(form.id)"
-                >删除</NButton
-              >
+            <NTable striped>
+              <thead>
+                <tr>
+                  <th v-for="label in tableHeaders" :key="label">{{ label }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="tableData.length === 0">
+                  <td v-for="n in tableHeaders.length" :key="n">-</td>
+                </tr>
+                <tr v-else v-for="(item, index) in tableData" :key="index">
+                  <td v-for="(value, key) in item" :key="key">
+                    <NInput v-if="images[selectedImage].editable" v-model:value="tableData[index][key]" />
+                    <span v-else>{{ value }}</span>
+                  </td>
+                  <td>
+                    <NButton type="error" ghost @click="removeRow(index)">
+                      刪除
+                    </NButton>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="4">總計：</td>
+                  <td>{{ totalCalories }}</td>
+                  <td>{{ totalProtein }}</td>
+                  <td>{{ totalLipids }}</td>
+                  <td>{{ totalCarbohydrate }}</td>
+                  <td>-</td>
+                  <td>-</td>
+                </tr>
+              </tbody>
+            </NTable>
+            <div style="display: flex; justify-content: end; padding: 10px 0;">
+              <NButton @click="confirmSubmit(images[selectedImage])"
+                :disabled="!images[selectedImage].canSubmit || isSubmitting">提交</NButton>
             </div>
           </div>
         </NScrollbar>
@@ -103,188 +90,234 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
-import { NForm, NInput, NButton, NGrid, NGi, NScrollbar } from 'naive-ui'
-import { FormData, FormInstance, HistoryItem, SelectionData } from '@/global'
-//icon
-import { NoImage } from '@vicons/carbon'
-//store
-import { useSelectionStore } from '@/stores/selectionStore'
-//compoe
-import ImagePreview from '@/views/food-list/_components/ImagePreview.vue'
-import HistoryDrawer from '@/views/food-list/_components/drawer/HistoryDrawer.vue'
+import { ref, onMounted, Ref, watchEffect } from 'vue'
+import { NInput, NButton, NGrid, NGi, NScrollbar, useDialog } from 'naive-ui'
+import { Image, LabelHistoryItem } from '@/types/index.ts'
+import ImageSelector from '@/views/food-list/ImageSelector.vue'
+import ImageCarousel from '@/views/food-list/ImageCarousel.vue'
+//compoment
 import EditButton from '@/views/food-list/_components/button/EditButton.vue'
+import { fetchUserImages, submitImageLabels, fetchImageLabelHistory } from '@/services/api/report';
+import { useAuthStore } from '@/stores/authStore';
+import { useMessage, } from 'naive-ui'
 
-const imagePreviewRef = ref<typeof ImagePreview | null>(null)
+import { tableHeaders } from '@/utils/config/index.ts'
 
-const history: Ref<HistoryItem[]> = ref([])
-const forms = reactive<FormInstance[]>([])
-let idCounter = 0
-const drawerVisible = ref(false)
-const foodLabels = [
-  '食物',
-  '麵、飯、麵包、蔬菜、水果、豬肉、豆干、等等) ',
-  '烹飪方式 (炸、烤、煎、炒、滷、蒸、等等)',
-  '調味(醬:糖醋/泰式/蘑菇/黑胡椒/等等、辣椒、起司粉、等等)',
-  '熱量 (kcal/100g)',
-  '蛋白質 (g/100g)',
-  '脂質 (g/100g)',
-  '碳水 (g/100g)',
-]
+const images: Ref<Image[]> = ref([]);
+const authStore = useAuthStore();
+const dialog = useDialog()
+const isSubmitting = ref(false);
+const message = useMessage()
+const totalCalories = ref('-');
+const totalProtein = ref('-');
+const totalLipids = ref('-');
+const totalCarbohydrate = ref('-');
+const selectedImage = ref(0); // 將初始值設為 0
+const tableData: Ref<any[]> = ref([]);
+const isLoading = ref(true);
+const isRecognizing = ref(false);
 
-const formItems = foodLabels.map((label, i) => ({
-  label: label,
-  path: `name${i + 1}`,
-}))
-
-function createFormData(): FormData {
-  return formItems.reduce(
-    (acc, item) => ({
-      ...acc,
-      [item.path]: '',
-    }),
-    {},
-  )
+function removeRow(index: number) {
+  tableData.value.splice(index, 1);
 }
 
-const currentLabelIndex = ref(1)
-function resetLabelIndex() {
-  currentLabelIndex.value = 1
+onMounted(async () => {
+  try {
+    if (authStore.authState.isLoggedIn && authStore.authState.token) {
+      const response = await fetchUserImages();
+      if (response) {
+        images.value = response.map((img: Image) => ({
+          image_id: img.image_id,
+          is_label: img.is_label,
+          thumbnailUrl: `https://food-ai.efaipd.com/api/images/${img.image_id}/thumbnail`,
+          fullImageUrl: `https://food-ai.efaipd.com/api/images/${img.image_id}/view`,
+          editable: false,
+          canSubmit: true,
+        }));
+        await fetchLabelHistoryForSelectedImage(); // 加載初始圖片的標籤歷史
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching images:', error);
+  } finally {
+    isLoading.value = false;
+  }
+});
+
+function addNewRow() {
+  const newRow = {
+    '食物(麵、飯、麵包、蔬菜..等等)': '',
+    '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
+    '數量': '0',
+    '單位': '',
+    '熱量 (kcal/100g)': '0',
+    '蛋白質 (g/100g)': '0',
+    '脂質 (g/100g)': '0',
+    '碳水化合物 (g/100g)': '0',
+    '提交時間': ''
+  };
+  tableData.value.push(newRow);
 }
 
-function addFormWithData(selectionData: SelectionData) {
-  console.log('Received selection-saved with ID:', selectionData.id)
-  forms.push({
-    id: selectionData.id,
-    imageUrl: selectionData.imageUrl,
-    originalImageUrl: selectionData.originalImageUrl,
-    data: createFormData(),
-    editable: true,
-    labelIndex: useSelectionStore().getNextLabelIndex(),
-    isCustom: false,
-    canSubmit: true,
-  })
-}
-
-function addForm() {
-  const store = useSelectionStore()
-  forms.push({
-    id: `form-${idCounter++}`,
-    data: createFormData(),
-    editable: true,
-    label: `自定義${store.getNextCustomIndex()}`,
-    labelIndex: 0,
-    imageUrl: '',
-    isCustom: true,
-    canSubmit: true,
-  })
-}
-
-function handleSelectionRemoved(data: { id: string }) {
-  console.log('Received selection-removed with ID:', data.id)
-  const index = forms.findIndex((form) => form.id === data.id)
-  if (index !== -1) {
-    console.log('Removing form with index:', index)
-    forms.splice(index, 1)
+async function fetchLabelHistoryForSelectedImage() {
+  if (selectedImage.value !== null && images.value.length > 0 && selectedImage.value < images.value.length) {
+    const currentImage = images.value[selectedImage.value];
+    try {
+      const historyData = await fetchImageLabelHistory(currentImage.image_id);
+      if (historyData && historyData.length > 0) {
+        // 格式化接收到的歷史數據
+        const formattedData = historyData.map((item: LabelHistoryItem) => ({
+          '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
+          '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
+          '數量': String(item.quantity), // 將數字轉換為字符串
+          '單位': item.quantity_name,
+          '熱量 (kcal/100g)': String(item.calories), // 將數字轉換為字符串
+          '蛋白質 (g/100g)': String(item.protein), // 將數字轉換為字符串
+          '脂質 (g/100g)': String(item.lipids), // 將數字轉換為字符串
+          '碳水化合物 (g/100g)': String(item.carbohydrate), // 將數字轉換為字符串
+          '創建時間': String(item.created_at),
+        }));
+        tableData.value = formattedData;
+      } else {
+        tableData.value = [];
+      }
+    } catch (error) {
+      console.error('Error fetching label history:', error);
+    }
   }
 }
 
-const dialog = useDialog()
-// const showModal = ref(false);
-const isSubmitting = ref(false)
-function confirmSubmit(form: FormInstance) {
-  if (!form.canSubmit) return
+function showNoDataAlert() {
+  message.warning('需要有資料才能編輯。');
+}
 
-  isSubmitting.value = true
+function updateSelectedImage(index: number) {
+  selectedImage.value = index;
+  fetchLabelHistoryForSelectedImage();
+}
+
+function handleEditingChange(newEditingState: boolean, index: number) {
+  const currentImage: Image | undefined = images.value[index];
+  if (currentImage) {
+    currentImage.editable = newEditingState;
+    if ('editConfirmed' in currentImage) {
+      currentImage.editConfirmed = !newEditingState;
+    }
+  }
+}
+
+function confirmSubmit(image: Image) {
+  if (image.editable) {
+    message.error('請先確認編輯後再提交。');
+    return;
+  }
+  if ('editConfirmed' in image && !image.editConfirmed) {
+    message.error('請先確認編輯後再提交。');
+    return;
+  }
+  if (tableData.value.length === 0 || tableData.value.every(row => Object.values(row).every(value => !value))) {
+    message.error('沒有有效的數據可以提交。請確保表單已填寫。');
+    return;
+  }
+
   dialog.success({
     title: '確認提交',
-    content: '你確定要提交這個表單吗？',
+    content: '您確定要提交這個表單嗎？',
     positiveText: '確定',
     negativeText: '取消',
-    onPositiveClick: () => submitForm(form),
-  })
-  setTimeout(() => {
-    isSubmitting.value = false
-  }, 2000)
+    onPositiveClick: () => submitForm(image)
+  });
 }
 
-const showModal = ref(false)
-function submitForm(form: FormInstance) {
-  console.log('提交:', form.data)
-  form.editable = false
-  form.canSubmit = false
+async function submitForm(image: Image) {
+  const labelData = tableData.value.map(item => ({
+    food_name: item['食物(麵、飯、麵包、蔬菜..等等)'],
+    quantity_name: item['單位'],
+    quantity: parseFloat(item['數量']),
+    cooking_method: item['烹飪方式 (炸、烤、煎、炒、滷...等等)'],
+    calories: parseFloat(item['熱量 (kcal/100g)']),
+    protein: parseFloat(item['蛋白質 (g/100g)']),
+    lipids: parseFloat(item['脂質 (g/100g)']),
+    carbohydrate: parseFloat(item['碳水化合物 (g/100g)'])
+  }));
 
-  history.value.push({
-    id: form.id,
-    label: form.label || `Image${form.labelIndex}`,
-    data: { ...form.data },
-    imageUrl: form.imageUrl,
-    originalImageUrl: form.originalImageUrl || '',
-    timestamp: Date.now(),
-  })
-  showModal.value = false
-}
+  if (labelData.length === 0 || labelData.some(item => isNaN(item.quantity) || isNaN(item.calories) || isNaN(item.protein) || isNaN(item.lipids) || isNaN(item.carbohydrate))) {
+    message.warning('沒有有效的數據可以提交或部分數據格式不正確。');
+    return; // 如果數據無效或格式不正確，直接返回不執行提交
+  }
 
-function enableEditing(form: FormInstance) {
-  form.editable = true
-  form.canSubmit = true
-}
-
-function toggleDrawer() {
-  drawerVisible.value = !drawerVisible.value
-}
-
-function confirmRemoveForm(formId: string) {
-  dialog.error({
-    title: '確認刪除',
-    content: '您確定要刪除這個表單嗎？這個操作無法撤銷。',
-    positiveText: '確定刪除',
-    negativeText: '取消',
-    onPositiveClick: () => {
-      removeForm(formId)
-      // dialog.destroyAll();
-    },
-  })
-}
-
-function removeForm(formId: string) {
-  const formIndex = forms.findIndex((form) => form.id === formId)
-  if (formIndex !== -1) {
-    console.log('Removing form with index:', formIndex)
-    forms.splice(formIndex, 1)
-    const historyIndex = history.value.findIndex((h) => h.id === formId)
-    if (historyIndex !== -1) {
-      history.value.splice(historyIndex, 1)
-    }
-    if (imagePreviewRef.value) {
-      ;(imagePreviewRef.value as any)?.removeSelectionById(formId)
-    }
-    if (forms.length === 0) {
-      resetLabelIndex()
-    }
+  console.log("Sending the following data to API:", labelData);
+  const submissionPayload = { label_data: labelData };
+  isSubmitting.value = true;
+  try {
+    const response = await submitImageLabels(image.image_id, submissionPayload);
+    console.log('Response:', response);
+    fetchLabelHistoryForSelectedImage();
+    message.success('資料提交成功');
+  } catch (error) {
+    console.error('提交失敗:', error);
+    message.error('提交失敗');
+  } finally {
+    isSubmitting.value = false;
   }
 }
 
-function handleRemoveForm(formId: string) {
-  if (imagePreviewRef.value) {
-    ;(imagePreviewRef.value as any)?.removeSelectionById(formId)
-  }
-  const formIndex = forms.findIndex((form) => form.id === formId)
-  if (formIndex !== -1) {
-    forms.splice(formIndex, 1)
-    const historyIndex = history.value.findIndex((h) => h.id === formId)
-    if (historyIndex !== -1) {
-      history.value.splice(historyIndex, 1)
-    }
+function handleRecognitionResult({ response, selectedIndex }: { response: any, selectedIndex: number }) {
+  console.log('Received recognition data:', response);
+
+  if (!response || response.error) {
+    tableData.value = [{
+      '食物(麵、飯、麵包、蔬菜..等等)': '請重新辨識',
+      '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
+      '數量': '',
+      '單位': '',
+      '熱量 (kcal/100g)': '',
+      '蛋白質 (g/100g)': '',
+      '脂質 (g/100g)': '',
+      '碳水化合物 (g/100g)': '',
+      '創建時間': ''
+    }];
+  } else if (Array.isArray(response)) {
+    const formattedData = response.map((item: any) => ({
+      '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
+      '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
+      '數量': String(item.quantity), // 確保數值轉為字符串
+      '單位': item.quantity_name,
+      '熱量 (kcal/100g)': String(item.calories), // 確保數值轉為字符串
+      '蛋白質 (g/100g)': String(item.protein), // 確保數值轉為字符串
+      '脂質 (g/100g)': String(item.lipids), // 確保數值轉為字符串
+      '碳水化合物 (g/100g)': String(item.carbohydrate), // 確保數值轉為字符串
+      '創建時間': ''
+    }));
+    tableData.value = formattedData;
+    images.value[selectedIndex].is_label = true;
+  } else {
+    tableData.value = [{
+      '食物(麵、飯、麵包、蔬菜..等等)': '請重新辨識',
+      '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
+      '數量': '',
+      '單位': '',
+      '熱量 (kcal/100g)': '',
+      '蛋白質 (g/100g)': '',
+      '脂質 (g/100g)': '',
+      '碳水化合物 (g/100g)': '',
+      '創建時間': ''
+    }];
   }
 }
 
-function handleHistorySelect(item: { originalImageUrl: string }) {
-  if (imagePreviewRef.value) {
-    imagePreviewRef.value.loadImage(item.originalImageUrl)
-  }
-}
+watchEffect(() => {
+  fetchLabelHistoryForSelectedImage(); // 當選定圖片改變時，重新載入歷史資料
+});
+
+watchEffect(() => {
+  totalCalories.value = tableData.value.reduce((total, item) => total + parseFloat(item['熱量 (kcal/100g)'] || 0), 0);
+  totalProtein.value = tableData.value.reduce((total, item) => total + parseFloat(item['蛋白質 (g/100g)'] || 0), 0);
+  totalLipids.value = tableData.value.reduce((total, item) => total + parseFloat(item['脂質 (g/100g)'] || 0), 0);
+  totalCarbohydrate.value = tableData.value.reduce((total, item) => total + parseFloat(item['碳水化合物 (g/100g)'] || 0), 0);
+});
 </script>
+
 
 <style scoped>
 .form-header {
@@ -304,70 +337,7 @@ function handleHistorySelect(item: { originalImageUrl: string }) {
   padding: 20px;
 }
 
-.item-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.left-part,
-.right-part {
-  flex: 1;
-  padding: 5px;
-}
-
 .form-title-container {
-  display: flex;
-  align-items: center;
-}
-
-.form-image-thumbnail {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  margin-right: 10px;
-}
-
-.default-icon-container {
-  width: 50px;
-  height: 50px;
-  margin-right: 12px;
-  max-height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #eee;
-  border-radius: 8px;
-}
-
-.form-image-thumbnail {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  margin-right: 10px;
-  border-radius: 8px;
-}
-
-.form-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-
-.form-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  flex: 1;
-  min-width: 120px;
-  margin-right: 12px;
-}
-
-.form-label {
-  height: 100px;
-  margin-bottom: 4px;
-
   display: flex;
   align-items: center;
 }

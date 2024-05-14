@@ -38,8 +38,13 @@ export default defineConfig({
       },
     ],
   },
-  // server: {
-  //   host: true,
-  //   port: 39999,
-  // },
+  server: {
+    proxy: {
+      '/v1': {
+        target: 'https://food-ai.efaipd.com/api',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })
