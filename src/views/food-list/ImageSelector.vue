@@ -8,7 +8,9 @@
         <NGi v-for="(image, index) in images" :key="image.url">
           <NButton :class="['image-button', { selected: index === selectedImage }]" @click="selectImage(index)">
             <div class="image-container">
+              <NSpin :show="isRecognizing && index === selectedImage">
               <img :src="image.url" :alt="'Image ' + (index + 1)" loading="lazy" class="image-preview" />
+            </NSpin>
               <NIcon v-if="image.is_label" size="24" :component="CheckmarkFilled" class="label-icon" />
             </div>
           </NButton>
@@ -31,13 +33,13 @@ import { ArrowUp, ArrowDown , CheckmarkFilled   } from '@vicons/carbon'
 
 const props = defineProps<{
   images: { url: string, is_label: boolean }[]  
-  selectedImage: number 
+  selectedImage: number;
+  isRecognizing: boolean;
 }>();
 
 const scrollContainer = ref<HTMLDivElement | null>(null)
 const atTop = ref(true)
 const atBottom = ref(false)
-
 const emit = defineEmits(['update:selectedImage']);
 
 function selectImage(index: any) {

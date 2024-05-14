@@ -2,7 +2,7 @@
     <div class="carousel-container">
         <NSpin :show="isRecognizing">
             <div class="carousel-image-container" v-if="images && images.length > 0">
-                <NCarousel :current-index="selectedImage" :show-dots="false" trigger="click">
+                <NCarousel :current-index="selectedImage" :show-dots="false" trigger="click" @update:currentIndex="updateCurrentIndex">
                     <NCarouselItem v-for="(image, index) in images" :key="index">
                         <div>
                             <img :src="image.url" class="carousel-image" loading="lazy" alt="Carousel Image" />
@@ -27,7 +27,7 @@ const props = defineProps<{
     selectedImage: number;
 }>();
 
-const emit = defineEmits(['recognitionResult']);
+const emit = defineEmits(['recognitionResult', 'update:selectedImage']);
 const clickCounts = ref<Record<number, number>>({});
 const isRecognizing = ref(false);
 
@@ -35,6 +35,10 @@ function extractImageId(url: string) {
     const parts = url.split('/');
     const imageId = parts[parts.length - 2];
     return imageId;
+}
+
+function updateCurrentIndex(index: number) {
+    emit('update:selectedImage', index);
 }
 
 async function triggerRecognition() {
@@ -48,6 +52,7 @@ async function triggerRecognition() {
         if (imageId) {
             try {
                 isRecognizing.value = true;  
+                emit('update:recognizing', true);
                 const response = await recognizeImage(imageId);
                 console.log(response);
                 emit('recognitionResult', { response, selectedIndex: props.selectedImage });
@@ -56,6 +61,7 @@ async function triggerRecognition() {
                 emit('recognitionResult', { error: true, selectedIndex: props.selectedImage });
             } finally {
                 isRecognizing.value = false;
+                emit('update:recognizing', false);
             }
         }
     }

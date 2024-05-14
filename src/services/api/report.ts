@@ -43,7 +43,6 @@ export const submitImageLabels = async (
 }
 
 //獲取歷史資料
-// services/api/report.ts// 添加獲取圖片標籤歷史的函數
 export const fetchImageLabelHistory = async (imageId: string): Promise<any> => {
   try {
       const response = await axiosInstance.get(`/images/${imageId}/label/history`);

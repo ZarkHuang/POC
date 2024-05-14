@@ -11,5 +11,6 @@ export const tableHeaders = ref([
     '蛋白質 (g/100g)',
     '脂質 (g/100g)',
     '碳水碳水化合物 (g/100g)',
+    '提交時間',
     '狀態'
   ]);

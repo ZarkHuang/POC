@@ -3,7 +3,7 @@
     <NGrid cols="12" x-gap="12">
       <NGi class="image-selector">
         <ImageSelector :images="images.map(image => ({ url: image.thumbnailUrl, is_label: image.is_label }))"
-          @update:selectedImage="updateSelectedImage" :selectedImage="selectedImage" />
+          @update:selectedImage="updateSelectedImage" :selectedImage="selectedImage" :isRecognizing="isRecognizing" />
       </NGi>
       <NGi :span="10">
         <div v-if="isLoading">
@@ -11,7 +11,7 @@
         </div>
         <div v-else-if="images.length > 0">
           <ImageCarousel :images="images.map(image => ({ url: image.fullImageUrl }))" :selectedImage="selectedImage"
-            @recognitionResult="handleRecognitionResult" />
+            @recognitionResult="handleRecognitionResult" @update:recognizing="isRecognizing = $event" />
         </div>
         <div v-else>
           <p>沒有任何資料</p>
@@ -25,7 +25,8 @@
         </div>
         <NScrollbar>
           <div v-if="selectedImage < images.length" :key="images[selectedImage].image_id" class="form-content">
-            <NGrid cols="12" justify="space-between" class="form-title-container" style="align-items: center; margin-bottom: 12px; margin-top: -12px">
+            <NGrid cols="12" justify="space-between" class="form-title-container"
+              style="align-items: center; margin-bottom: 12px; margin-top: -12px">
               <NGi :span="3">
                 <NButton @click="addNewRow" type="primary">
                   新增欄位
@@ -33,8 +34,8 @@
               </NGi>
               <NGi :span="9" justify="end">
                 <div style="display: flex; justify-content: flex-end; align-items: center;">
-                  <NH5 class="form-title" style="margin: 0px 16px">圖片 ID：{{ images[selectedImage].image_id }}</NH5>
-                  <NH5 class="form-title" style="margin: 0px 16px">名字：王大明</NH5>
+                  <!-- <NH5 class="form-title" style="margin: 0px 16px">圖片 ID：{{ images[selectedImage].image_id }}</NH5> -->
+                  <!-- <NH5 class="form-title" style="margin: 0px 16px">名字：王大明</NH5> -->
                   <NH5 class="form-title" style="margin: 0px 16px">
                     時間：
                     <NTime :time="Date.now()" type="date" />
@@ -61,10 +62,10 @@
                     <span v-else>{{ value }}</span>
                   </td>
                   <td>
-          <NButton type="error" @click="removeRow(index)">
-            刪除
-          </NButton>
-        </td>
+                    <NButton type="error" ghost @click="removeRow(index)">
+                      刪除
+                    </NButton>
+                  </td>
                 </tr>
                 <tr>
                   <td colspan="4">總計：</td>
@@ -72,6 +73,7 @@
                   <td>{{ totalProtein }}</td>
                   <td>{{ totalLipids }}</td>
                   <td>{{ totalCarbohydrate }}</td>
+                  <td>-</td>
                   <td>-</td>
                 </tr>
               </tbody>
@@ -114,6 +116,8 @@ const selectedImage = ref(0)
 const tableData: Ref<any[]> = ref([]);
 const isLoading = ref(true);
 
+const isRecognizing = ref(false);
+
 function removeRow(index: number) {
   tableData.value.splice(index, 1);
 }
@@ -151,7 +155,8 @@ function addNewRow() {
     '熱量 (kcal/100g)': '0',
     '蛋白質 (g/100g)': '0',
     '脂質 (g/100g)': '0',
-    '碳水化合物 (g/100g)': '0'
+    '碳水化合物 (g/100g)': '0',
+    '提交時間':''
   };
   tableData.value.push(newRow);
 }
@@ -172,6 +177,7 @@ async function fetchLabelHistoryForSelectedImage() {
           '蛋白質 (g/100g)': String(item.protein),
           '脂質 (g/100g)': String(item.lipids),
           '碳水化合物 (g/100g)': String(item.carbohydrate),
+          '創建時間': String(item.created_at),
         }));
         tableData.value = formattedData;
       } else {
@@ -255,7 +261,7 @@ async function submitForm(image: Image) {
 function handleRecognitionResult({ response, selectedIndex }: { response: any, selectedIndex: number }) {
   console.log('Received recognition data:', response);
 
-  if (response.error) {
+  if (!response || response.error) {
     tableData.value = [{
       '食物(麵、飯、麵包、蔬菜..等等)': '請重新辨識',
       '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
@@ -265,6 +271,7 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
       '蛋白質 (g/100g)': '',
       '脂質 (g/100g)': '',
       '碳水化合物 (g/100g)': '',
+      '創建時間':''
     }];
   } else if (Array.isArray(response)) {
     const formattedData = response.map((item: any) => ({
@@ -276,9 +283,9 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
       '蛋白質 (g/100g)': item.protein,
       '脂質 (g/100g)': item.lipids,
       '碳水化合物 (g/100g)': item.carbohydrate,
+      '創建時間':''
     }));
     tableData.value = formattedData;
-    // 更新圖片的標籤狀態
     images.value[selectedIndex].is_label = true;
   } else {
     tableData.value = [{
@@ -290,6 +297,7 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
       '蛋白質 (g/100g)': '',
       '脂質 (g/100g)': '',
       '碳水化合物 (g/100g)': '',
+      '創建時間':''
     }];
   }
 }
