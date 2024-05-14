@@ -60,6 +60,11 @@
                     <NInput v-if="images[selectedImage].editable" v-model:value="item[key]" />
                     <span v-else>{{ value }}</span>
                   </td>
+                  <td>
+          <NButton type="error" @click="removeRow(index)">
+            刪除
+          </NButton>
+        </td>
                 </tr>
                 <tr>
                   <td colspan="4">總計：</td>
@@ -67,6 +72,7 @@
                   <td>{{ totalProtein }}</td>
                   <td>{{ totalLipids }}</td>
                   <td>{{ totalCarbohydrate }}</td>
+                  <td>-</td>
                 </tr>
               </tbody>
             </NTable>
@@ -107,6 +113,11 @@ const totalCarbohydrate = ref('-');
 const selectedImage = ref(0)
 const tableData: Ref<any[]> = ref([]);
 const isLoading = ref(true);
+
+function removeRow(index: number) {
+  tableData.value.splice(index, 1);
+}
+
 
 onMounted(async () => {
   try {

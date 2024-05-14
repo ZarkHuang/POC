@@ -76,7 +76,7 @@ async function triggerRecognition() {
 .carousel-image-container {
     position: relative;
     width: 100%;
-    height: calc(50vh);
+    height: calc(50vh + 48px);
     border: 2px solid #dce4ec;
     margin-bottom: 24px;
 }
