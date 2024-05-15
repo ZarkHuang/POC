@@ -41,8 +41,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/v1': {
-        // target: 'https://food-ai.efaipd.com/api',
-        target: 'https://food-ai.everfortuneai.com.tw/api',
+        target: 'https://food-ai.efaipd.com/api',
+        // target: 'https://food-ai.everfortuneai.com.tw/api',
         changeOrigin: true,
         secure: false,
       },

@@ -2,17 +2,24 @@
   <NSpace vertical>
     <NGrid cols="12" x-gap="12">
       <NGi :span="2">
-        <ImageSelector :images="images.map(image => ({ url: image.thumbnailUrl, is_label: image.is_label! }))"
-          @update:selectedImage="updateSelectedImage" :selectedImage="selectedImage" :isRecognizing="isRecognizing" />
+        <ImageSelector 
+          :images="images.map(image => ({ url: image.thumbnailUrl, is_label: image.is_label! }))"
+          @update:selectedImage="updateSelectedImage" 
+          :selectedImage="selectedImage" 
+          :isRecognizing="isRecognizing" />
       </NGi>
       <NGi :span="10">
         <div v-if="isLoading">
           <p>圖片資源加载中...</p>
         </div>
         <div v-else-if="images.length > 0">
-          <ImageCarousel :image="images[selectedImage]?.fullImageUrl || ''" :selectedImage="selectedImage"
-            :isLoadingImage="isLoadingImage" @recognitionResult="handleRecognitionResult"
-            @update:recognizing="isRecognizing = $event" @update:selectedImage="updateSelectedImage" />
+          <ImageCarousel 
+            :image="images[selectedImage]?.fullImageUrl || ''" 
+            :selectedImage="selectedImage"
+            :isLoadingImage="isLoadingImage" 
+            @recognitionResult="handleRecognitionResult"
+            @update:recognizing="isRecognizing = $event" 
+            @update:selectedImage="updateSelectedImage" />
         </div>
         <div v-else>
           <p>沒有任何資料</p>
@@ -40,8 +47,11 @@
                     時間：
                     <NTime :time="Date.now()" type="date" />
                   </NH5>
-                  <EditButton :isEditing="images[selectedImage].editable" :isDisabled="!images[selectedImage].canSubmit"
-                    :hasData="tableData.length > 0" @update:isEditing="handleEditingChange($event, selectedImage)"
+                  <EditButton 
+                    :isEditing="images[selectedImage].editable" 
+                    :isDisabled="!images[selectedImage].canSubmit"
+                    :hasData="tableData.length > 0" 
+                    @update:isEditing="handleEditingChange($event, selectedImage)"
                     @noData="showNoDataAlert" />
                 </div>
               </NGi>
@@ -86,16 +96,20 @@
         </NScrollbar>
       </NGi>
     </NGrid>
+    <HistoryDrawer v-model:show="drawerVisible" :historyData="historyData"/>
+    <Button @click="toggleDrawer" class="history-button" type="primary"><NIcon size="20" :component="ChevronLeft" /></Button>
   </NSpace>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, Ref , watchEffect } from 'vue';
+import { ref, onMounted, Ref, watchEffect } from 'vue';
 import { NInput, NButton, NGrid, NGi, NScrollbar, useDialog } from 'naive-ui';
+import { ChevronLeft } from '@vicons/carbon'
 import { Image } from '@/types/index.ts';
 import ImageSelector from '@/views/food-list/ImageSelector.vue';
 import ImageCarousel from '@/views/food-list/ImageCarousel.vue';
 import EditButton from '@/views/food-list/_components/button/EditButton.vue';
+import HistoryDrawer from '@/views/food-list/_components/drawer/HistoryDrawer.vue';
 import { fetchUserImages, fetchImageLabelHistory, submitImageLabels } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 import { useMessage } from 'naive-ui';
@@ -111,7 +125,8 @@ const selectedImage = ref(0);
 const isLoading = ref(true);
 const isRecognizing = ref(false);
 const isLoadingImage = ref(false);
-
+const drawerVisible = ref(false); // 控制 Drawer 顯示的變量
+const historyData = ref([]); // 假設歷史數據是這樣的結構
 const { tableData, totalCalories, totalProtein, totalLipids, totalCarbohydrate, formatHistoryData, addNewRow, removeRow, updateTotals } = useFormData();
 
 onMounted(async () => {
@@ -200,14 +215,14 @@ function confirmSubmit(image: Image) {
 
 function validateLabelData(labelData: any[]): { isValid: boolean, errors: string[] } {
   const errors: string[] = [];
-  
+
   labelData.forEach((item, index) => {
     if (!item.food_name) errors.push(`第 ${index + 1} 行的食物名稱為必填項目`);
     if (!item.quantity_name) errors.push(`第 ${index + 1} 行的數量單位為必填項目`);
     if (!item.cooking_method) errors.push(`第 ${index + 1} 行的烹飪方式為必填項目`);
     if (item.quantity <= 0) errors.push(`第 ${index + 1} 行的數量必須大於 0`);
     if (item.calories <= 0) errors.push(`第 ${index + 1} 行的熱量必須大於 0`);
-    if (item.protein <= 0) errors.push(`第 ${index + 1} 行的蛋白質必須大於 0`);
+    if (item.protein <= 0) errors.push(`第 ${index + 1} 行的蛋白質必須大於 0`); 
     if (item.lipids <= 0) errors.push(`第 ${index + 1} 行的脂質必須大於 0`);
     if (item.carbohydrate <= 0) errors.push(`第 ${index + 1} 行的碳水化合物必須大於 0`);
   });
@@ -255,12 +270,29 @@ async function submitForm(image: Image) {
   }
 }
 
-
 function handleRecognitionResult({ response, selectedIndex }: { response: any, selectedIndex: number }) {
   console.log('Received recognition data:', response);
-  if (!response || response.error) {
+
+  // 檢查 response 是否為 null 或 undefined
+  if (!response) {
     tableData.value = [{
-      '食物(麵、飯、麵包、蔬菜..等等)': '請重新辨識',
+      '食物(麵、飯、麵包、蔬菜..等等)': '沒有收到有效的回應。',
+      '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
+      '數量': '',
+      '單位': '',
+      '熱量 (kcal/100g)': '',
+      '蛋白質 (g/100g)': '',
+      '脂質 (g/100g)': '',
+      '碳水化合物 (g/100g)': '',
+      '創建時間': ''
+    }];
+    return;
+  }
+
+  // 檢查 response 是否包含 error_desc
+  if (response.error_desc) {
+    tableData.value = [{
+      '食物(麵、飯、麵包、蔬菜..等等)': response.error_desc,
       '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
       '數量': '',
       '單位': '',
@@ -298,14 +330,19 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
   }
   updateTotals();
 }
+
 watchEffect(() => {
   totalCalories.value = tableData.value.reduce((total, item) => total + parseFloat(item['熱量 (kcal/100g)'] || 0), 0);
   totalProtein.value = tableData.value.reduce((total, item) => total + parseFloat(item['蛋白質 (g/100g)'] || 0), 0);
   totalLipids.value = tableData.value.reduce((total, item) => total + parseFloat(item['脂質 (g/100g)'] || 0), 0);
   totalCarbohydrate.value = tableData.value.reduce((total, item) => total + parseFloat(item['碳水化合物 (g/100g)'] || 0), 0);
 });
-</script>
 
+function toggleDrawer() {
+  drawerVisible.value = !drawerVisible.value;
+}
+
+</script>
 
 <style scoped>
 .form-header {
@@ -329,4 +366,30 @@ watchEffect(() => {
   display: flex;
   align-items: center;
 }
+
+.history-button {
+  position: fixed;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  height: 120px;
+  width: 32px;
+  z-index: 1000;
+  background-color: none;
+  color: #000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  opacity: 0.5; 
+  transition: opacity 0.3s, box-shadow 0.3s;
+  border:1px solid #ccc
+}
+
+.history-button:hover {
+  opacity: 1;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+  background-color: #18a058; 
+  opacity: 0.8; 
+  color: #eee;
+}
+
 </style>

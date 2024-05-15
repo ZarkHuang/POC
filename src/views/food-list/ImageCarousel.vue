@@ -36,30 +36,34 @@ function extractImageId(url: string) {
 }
 
 async function triggerRecognition() {
-    if (!(props.selectedImage in clickCounts.value)) {
-        clickCounts.value[props.selectedImage] = 0;
-    }
-    if (clickCounts.value[props.selectedImage] < 3) {
-        clickCounts.value[props.selectedImage]++;
-        const imageUrl = props.image;
-        const imageId = extractImageId(imageUrl);
-        if (imageId) {
-            try {
-                isRecognizing.value = true;
-                emit('update:recognizing', true);
-                const response = await recognizeImage(imageId);
-                // console.log(response);
-                emit('recognitionResult', { response, selectedIndex: props.selectedImage });
-            } catch (error) {
-                console.error('API call failed:', error);
-                emit('recognitionResult', { error: true, selectedIndex: props.selectedImage });
-            } finally {
-                isRecognizing.value = false;
-                emit('update:recognizing', false);
-            }
+  if (!(props.selectedImage in clickCounts.value)) {
+    clickCounts.value[props.selectedImage] = 0;
+  }
+  if (clickCounts.value[props.selectedImage] < 3) {
+    clickCounts.value[props.selectedImage]++;
+    const imageUrl = props.image;
+    const imageId = extractImageId(imageUrl);
+    if (imageId) {
+      try {
+        isRecognizing.value = true;
+        emit('update:recognizing', true);
+        const response = await recognizeImage(imageId);
+        if (response.error_code) {
+          emit('recognitionResult', { response: { error_desc: response.error_desc }, selectedIndex: props.selectedImage });
+        } else {
+          emit('recognitionResult', { response, selectedIndex: props.selectedImage });
         }
+      } catch (error) {
+        console.error('API call failed:', error);
+        emit('recognitionResult', { response: { error_desc: 'API 呼叫失敗，請稍後再試。' }, selectedIndex: props.selectedImage });
+      } finally {
+        isRecognizing.value = false;
+        emit('update:recognizing', false);
+      }
     }
+  }
 }
+
 </script>
 
 <style scoped>
