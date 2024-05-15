@@ -1,6 +1,6 @@
 <template>
     <div class="carousel-container">
-        <NSpin :show="isRecognizing">
+        <NSpin :show="isLoadingImage || isRecognizing">
             <div class="carousel-image-container" v-if="image">
                 <div>
                     <img :src="image" class="carousel-image" loading="lazy" alt="Carousel Image" />
@@ -8,7 +8,8 @@
             </div>
         </NSpin>
         <div class="button-container">
-            <NButton @click="triggerRecognition" :disabled="clickCounts[selectedImage] >= 3 || isRecognizing" type="primary">圖像辨識</NButton>
+            <NButton @click="triggerRecognition" :disabled="clickCounts[selectedImage] >= 3 || isRecognizing"
+                type="primary">圖像辨識</NButton>
         </div>
     </div>
 </template>
@@ -21,6 +22,7 @@ import { recognizeImage } from '@/services/api/report';
 const props = defineProps<{
     image: string;
     selectedImage: number;
+    isLoadingImage: boolean; // 新增 prop
 }>();
 
 const emit = defineEmits(['recognitionResult', 'update:recognizing']);
@@ -43,10 +45,10 @@ async function triggerRecognition() {
         const imageId = extractImageId(imageUrl);
         if (imageId) {
             try {
-                isRecognizing.value = true;  
+                isRecognizing.value = true;
                 emit('update:recognizing', true);
                 const response = await recognizeImage(imageId);
-                console.log(response);
+                // console.log(response);
                 emit('recognitionResult', { response, selectedIndex: props.selectedImage });
             } catch (error) {
                 console.error('API call failed:', error);

@@ -27,14 +27,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps } from 'vue'
+import { ref } from 'vue'
 import { NButton, NIcon, NGrid, NGi, NSpace } from 'naive-ui'
-import { ArrowUp, ArrowDown , CheckmarkFilled   } from '@vicons/carbon'
+import { ArrowUp, ArrowDown, CheckmarkFilled } from '@vicons/carbon'
 
-const props = defineProps<{
-  images: { url: string, is_label: boolean }[]  
-  selectedImage: number;
-  isRecognizing: boolean;
+const { images, selectedImage, isRecognizing } = defineProps<{
+  images: { url: string, is_label: boolean }[]
+  selectedImage: number
+  isRecognizing: boolean
 }>();
 
 const scrollContainer = ref<HTMLDivElement | null>(null)
@@ -43,7 +43,6 @@ const atBottom = ref(false)
 const emit = defineEmits(['update:selectedImage']);
 
 function selectImage(index: any) {
-  console.log("Selected image has label:", props.images[index].is_label);
   emit('update:selectedImage', index);
 }
 
@@ -76,7 +75,6 @@ function checkScrollPosition() {
     container.scrollTop + container.clientHeight >= container.scrollHeight
 }
 </script>
-
 
 <style scoped>
 .image-button {

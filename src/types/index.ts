@@ -26,14 +26,14 @@ export interface FormData {
 }
 
 export interface Image {
-  editable: boolean;  // 指明是否可編輯
-  formData: FormData | null;  // 指定為FormData型別或無數據時為null
-  formItems: FormInstance[];  // 假設formItems是一組FormInstance的數據
-  canSubmit: boolean;  // 指明是否可提交
-  image_id: string;  // 明確指定為字符串型別
+  editable: boolean;  
+  formData: FormData | null;  
+  formItems: FormInstance[];  
+  canSubmit: boolean; 
+  image_id: string;
   thumbnailUrl: string;
   fullImageUrl: string;
-  is_label?: boolean;  // 如果從API獲得的數據包含is_label
+  is_label?: boolean;
 }
 
 export interface LabelHistoryItem {

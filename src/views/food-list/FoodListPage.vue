@@ -11,8 +11,8 @@
         </div>
         <div v-else-if="images.length > 0">
           <ImageCarousel :image="images[selectedImage]?.fullImageUrl || ''" :selectedImage="selectedImage"
-            @recognitionResult="handleRecognitionResult" @update:recognizing="isRecognizing = $event"
-            @update:selectedImage="updateSelectedImage" />
+            :isLoadingImage="isLoadingImage" @recognitionResult="handleRecognitionResult"
+            @update:recognizing="isRecognizing = $event" @update:selectedImage="updateSelectedImage" />
         </div>
         <div v-else>
           <p>沒有任何資料</p>
@@ -90,36 +90,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, Ref, watchEffect } from 'vue'
-import { NInput, NButton, NGrid, NGi, NScrollbar, useDialog } from 'naive-ui'
-import { Image, LabelHistoryItem } from '@/types/index.ts'
-import ImageSelector from '@/views/food-list/ImageSelector.vue'
-import ImageCarousel from '@/views/food-list/ImageCarousel.vue'
-//compoment
-import EditButton from '@/views/food-list/_components/button/EditButton.vue'
-import { fetchUserImages, submitImageLabels, fetchImageLabelHistory } from '@/services/api/report';
+import { ref, onMounted, Ref , watchEffect } from 'vue';
+import { NInput, NButton, NGrid, NGi, NScrollbar, useDialog } from 'naive-ui';
+import { Image } from '@/types/index.ts';
+import ImageSelector from '@/views/food-list/ImageSelector.vue';
+import ImageCarousel from '@/views/food-list/ImageCarousel.vue';
+import EditButton from '@/views/food-list/_components/button/EditButton.vue';
+import { fetchUserImages, fetchImageLabelHistory, submitImageLabels } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
-import { useMessage, } from 'naive-ui'
-
-import { tableHeaders } from '@/utils/config/index.ts'
+import { useMessage } from 'naive-ui';
+import { tableHeaders } from '@/utils/config/index.ts';
+import { useFormData } from '@/composables/formData.ts';
 
 const images: Ref<Image[]> = ref([]);
 const authStore = useAuthStore();
-const dialog = useDialog()
+const dialog = useDialog();
 const isSubmitting = ref(false);
-const message = useMessage()
-const totalCalories = ref('-');
-const totalProtein = ref('-');
-const totalLipids = ref('-');
-const totalCarbohydrate = ref('-');
-const selectedImage = ref(0); // 將初始值設為 0
-const tableData: Ref<any[]> = ref([]);
+const message = useMessage();
+const selectedImage = ref(0);
 const isLoading = ref(true);
 const isRecognizing = ref(false);
+const isLoadingImage = ref(false);
 
-function removeRow(index: number) {
-  tableData.value.splice(index, 1);
-}
+const { tableData, totalCalories, totalProtein, totalLipids, totalCarbohydrate, formatHistoryData, addNewRow, removeRow, updateTotals } = useFormData();
 
 onMounted(async () => {
   try {
@@ -134,7 +127,7 @@ onMounted(async () => {
           editable: false,
           canSubmit: true,
         }));
-        await fetchLabelHistoryForSelectedImage(); // 加載初始圖片的標籤歷史
+        await fetchLabelHistoryForSelectedImage();
       }
     }
   } catch (error) {
@@ -144,40 +137,13 @@ onMounted(async () => {
   }
 });
 
-function addNewRow() {
-  const newRow = {
-    '食物(麵、飯、麵包、蔬菜..等等)': '',
-    '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
-    '數量': '0',
-    '單位': '',
-    '熱量 (kcal/100g)': '0',
-    '蛋白質 (g/100g)': '0',
-    '脂質 (g/100g)': '0',
-    '碳水化合物 (g/100g)': '0',
-    '提交時間': ''
-  };
-  tableData.value.push(newRow);
-}
-
 async function fetchLabelHistoryForSelectedImage() {
   if (selectedImage.value !== null && images.value.length > 0 && selectedImage.value < images.value.length) {
     const currentImage = images.value[selectedImage.value];
     try {
       const historyData = await fetchImageLabelHistory(currentImage.image_id);
       if (historyData && historyData.length > 0) {
-        // 格式化接收到的歷史數據
-        const formattedData = historyData.map((item: LabelHistoryItem) => ({
-          '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
-          '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
-          '數量': String(item.quantity), // 將數字轉換為字符串
-          '單位': item.quantity_name,
-          '熱量 (kcal/100g)': String(item.calories), // 將數字轉換為字符串
-          '蛋白質 (g/100g)': String(item.protein), // 將數字轉換為字符串
-          '脂質 (g/100g)': String(item.lipids), // 將數字轉換為字符串
-          '碳水化合物 (g/100g)': String(item.carbohydrate), // 將數字轉換為字符串
-          '創建時間': String(item.created_at),
-        }));
-        tableData.value = formattedData;
+        tableData.value = formatHistoryData(historyData);
       } else {
         tableData.value = [];
       }
@@ -185,15 +151,18 @@ async function fetchLabelHistoryForSelectedImage() {
       console.error('Error fetching label history:', error);
     }
   }
+  updateTotals();
 }
 
 function showNoDataAlert() {
   message.warning('需要有資料才能編輯。');
 }
 
-function updateSelectedImage(index: number) {
+async function updateSelectedImage(index: number) {
   selectedImage.value = index;
-  fetchLabelHistoryForSelectedImage();
+  isLoadingImage.value = true;
+  await fetchLabelHistoryForSelectedImage();
+  isLoadingImage.value = false;
 }
 
 function handleEditingChange(newEditingState: boolean, index: number) {
@@ -229,6 +198,26 @@ function confirmSubmit(image: Image) {
   });
 }
 
+function validateLabelData(labelData: any[]): { isValid: boolean, errors: string[] } {
+  const errors: string[] = [];
+  
+  labelData.forEach((item, index) => {
+    if (!item.food_name) errors.push(`第 ${index + 1} 行的食物名稱為必填項目`);
+    if (!item.quantity_name) errors.push(`第 ${index + 1} 行的數量單位為必填項目`);
+    if (!item.cooking_method) errors.push(`第 ${index + 1} 行的烹飪方式為必填項目`);
+    if (item.quantity <= 0) errors.push(`第 ${index + 1} 行的數量必須大於 0`);
+    if (item.calories <= 0) errors.push(`第 ${index + 1} 行的熱量必須大於 0`);
+    if (item.protein <= 0) errors.push(`第 ${index + 1} 行的蛋白質必須大於 0`);
+    if (item.lipids <= 0) errors.push(`第 ${index + 1} 行的脂質必須大於 0`);
+    if (item.carbohydrate <= 0) errors.push(`第 ${index + 1} 行的碳水化合物必須大於 0`);
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
 async function submitForm(image: Image) {
   const labelData = tableData.value.map(item => ({
     food_name: item['食物(麵、飯、麵包、蔬菜..等等)'],
@@ -241,12 +230,16 @@ async function submitForm(image: Image) {
     carbohydrate: parseFloat(item['碳水化合物 (g/100g)'])
   }));
 
-  if (labelData.length === 0 || labelData.some(item => isNaN(item.quantity) || isNaN(item.calories) || isNaN(item.protein) || isNaN(item.lipids) || isNaN(item.carbohydrate))) {
-    message.warning('沒有有效的數據可以提交或部分數據格式不正確。');
-    return; // 如果數據無效或格式不正確，直接返回不執行提交
+  const { isValid, errors } = validateLabelData(labelData);
+
+  if (!isValid) {
+    message.warning('資料不完整或格式不正確，請檢查並填寫所有必填項目。');
+    errors.forEach(error => {
+      message.error(error);
+    });
+    return;
   }
 
-  console.log("Sending the following data to API:", labelData);
   const submissionPayload = { label_data: labelData };
   isSubmitting.value = true;
   try {
@@ -262,9 +255,9 @@ async function submitForm(image: Image) {
   }
 }
 
+
 function handleRecognitionResult({ response, selectedIndex }: { response: any, selectedIndex: number }) {
   console.log('Received recognition data:', response);
-
   if (!response || response.error) {
     tableData.value = [{
       '食物(麵、飯、麵包、蔬菜..等等)': '請重新辨識',
@@ -278,18 +271,17 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
       '創建時間': ''
     }];
   } else if (Array.isArray(response)) {
-    const formattedData = response.map((item: any) => ({
+    tableData.value = response.map((item: any) => ({
       '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
       '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
-      '數量': String(item.quantity), // 確保數值轉為字符串
+      '數量': String(item.quantity),
       '單位': item.quantity_name,
-      '熱量 (kcal/100g)': String(item.calories), // 確保數值轉為字符串
-      '蛋白質 (g/100g)': String(item.protein), // 確保數值轉為字符串
-      '脂質 (g/100g)': String(item.lipids), // 確保數值轉為字符串
-      '碳水化合物 (g/100g)': String(item.carbohydrate), // 確保數值轉為字符串
+      '熱量 (kcal/100g)': String(item.calories),
+      '蛋白質 (g/100g)': String(item.protein),
+      '脂質 (g/100g)': String(item.lipids),
+      '碳水化合物 (g/100g)': String(item.carbohydrate),
       '創建時間': ''
     }));
-    tableData.value = formattedData;
     images.value[selectedIndex].is_label = true;
   } else {
     tableData.value = [{
@@ -304,12 +296,8 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
       '創建時間': ''
     }];
   }
+  updateTotals();
 }
-
-// watchEffect(() => {
-//   fetchLabelHistoryForSelectedImage(); // 當選定圖片改變時，重新載入歷史資料
-// });
-
 watchEffect(() => {
   totalCalories.value = tableData.value.reduce((total, item) => total + parseFloat(item['熱量 (kcal/100g)'] || 0), 0);
   totalProtein.value = tableData.value.reduce((total, item) => total + parseFloat(item['蛋白質 (g/100g)'] || 0), 0);

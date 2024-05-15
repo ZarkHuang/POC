@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', {
     setLoginStatus(isLoggedIn: boolean, token?: string) {
       this.authState.isLoggedIn = isLoggedIn;
       this.authState.token = token;
-      console.log('Token set in localStorage:', token);
+      // console.log('Token set in localStorage:', token);
     },
     logOut() {
       this.authState.isLoggedIn = false;
