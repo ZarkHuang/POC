@@ -306,9 +306,9 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
   }
 }
 
-watchEffect(() => {
-  fetchLabelHistoryForSelectedImage(); // 當選定圖片改變時，重新載入歷史資料
-});
+// watchEffect(() => {
+//   fetchLabelHistoryForSelectedImage(); // 當選定圖片改變時，重新載入歷史資料
+// });
 
 watchEffect(() => {
   totalCalories.value = tableData.value.reduce((total, item) => total + parseFloat(item['熱量 (kcal/100g)'] || 0), 0);
