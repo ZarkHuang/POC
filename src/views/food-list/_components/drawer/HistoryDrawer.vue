@@ -72,9 +72,14 @@ const paginatedHistoryItems = computed(() => {
 const totalPages = computed(() => Math.ceil(filteredHistoryItems.value.length / pageSize.value))
 
 function getThumbnailUrl(imageId: string) {
-  // const apiUrl = import.meta.env.VITE_APP_HOST_API_URL
-  return `https://food-ai.efaipd.com/api/images/${imageId}/thumbnail`
+  return `https://food-ai.everfortuneai.com.tw/api${imageId}/thumbnail`
 }
+
+// function getThumbnailUrl(imageId: string) {
+//   const apiUrl = import.meta.env.VITE_APP_HOST_API_URL;
+//   return `${apiUrl}/images/${imageId}/thumbnail`;
+// }
+
 </script>
 
 <style scoped>

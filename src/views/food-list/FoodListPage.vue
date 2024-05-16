@@ -137,8 +137,8 @@ onMounted(async () => {
         images.value = response.map((img: Image) => ({
           image_id: img.image_id,
           is_label: img.is_label,
-          thumbnailUrl: `https://food-ai.efaipd.com/api/images/${img.image_id}/thumbnail`,
-          fullImageUrl: `https://food-ai.efaipd.com/api/images/${img.image_id}/view`,
+          thumbnailUrl: `https://food-ai.everfortuneai.com.tw/api/images/${img.image_id}/thumbnail`,
+          fullImageUrl: `https://food-ai.everfortuneai.com.tw/api/images/${img.image_id}/view`,
           editable: false,
           canSubmit: true,
         }));
