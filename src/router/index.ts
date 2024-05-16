@@ -9,7 +9,7 @@ import FoodListPage from '@/views/food-list/FoodListPage.vue'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/admin/sign-in',
+    redirect: '/admin',
   },
   {
     path: '/admin/sign-in',
