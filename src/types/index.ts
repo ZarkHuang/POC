@@ -47,3 +47,20 @@ export interface LabelHistoryItem {
   carbohydrate: number;
   created_at: string;
 }
+
+export interface Label {
+  food_name: string;
+  quantity_name: string;
+  quantity: number;
+  cooking_method: string;
+  calories: number;
+  protein: number;
+  lipids: number;
+  carbohydrate: number;
+}
+
+export interface HistoryItem {
+  image_id: string;
+  label_list: Label[];
+  updated_at: string;
+}

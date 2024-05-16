@@ -110,7 +110,7 @@ import ImageSelector from '@/views/food-list/ImageSelector.vue';
 import ImageCarousel from '@/views/food-list/ImageCarousel.vue';
 import EditButton from '@/views/food-list/_components/button/EditButton.vue';
 import HistoryDrawer from '@/views/food-list/_components/drawer/HistoryDrawer.vue';
-import { fetchUserImages, fetchImageLabelHistory, submitImageLabels } from '@/services/api';
+import { fetchUserImages, fetchImageLabelHistory, submitImageLabels , fetchHistoryData } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 import { useMessage } from 'naive-ui';
 import { tableHeaders } from '@/utils/config/index.ts';
@@ -340,6 +340,13 @@ watchEffect(() => {
 
 function toggleDrawer() {
   drawerVisible.value = !drawerVisible.value;
+  if (drawerVisible.value) {
+    fetchHistoryData().then(response => {
+      historyData.value = response;
+    }).catch(error => {
+      console.error('Error fetching history data:', error);
+    });
+  }
 }
 
 </script>

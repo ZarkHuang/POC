@@ -46,10 +46,23 @@ export const submitImageLabels = async (
 export const fetchImageLabelHistory = async (imageId: string): Promise<any> => {
   try {
       const response = await axiosInstance.get(`/images/${imageId}/label/history`);
-      console.log("Label History Response:", response);
+      // console.log("Label History Response:", response);
       return response;
   } catch (error) {
       console.error('Error fetching label history:', error);
       throw error;
   }
 };
+
+
+// 獲取歷史紀錄數據
+export const fetchHistoryData = async (): Promise<any> => {
+  try {
+    const response = await axiosInstance.get('/admin/user/images/labels')
+    console.log('API Response:', response)
+    return response
+  } catch (error) {
+    console.error('Error fetching history data:', error)
+    throw error
+  }
+}
