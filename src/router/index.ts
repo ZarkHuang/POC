@@ -9,22 +9,22 @@ import FoodListPage from '@/views/food-list/FoodListPage.vue'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/sign-in',
+    redirect: '/admin/sign-in',
   },
   {
-    path: '/sign-in',
+    path: '/admin/sign-in',
     name: 'sign-in',
     meta: { layout: AuthPageLayout },
     component: SignInPage,
   },
   {
-    path: '/food-list',
+    path: '/admin/food-list',
     name: 'food-list',
     meta: { layout: ContentPageLayout },
     component: FoodListPage,
   },
   {
-    path: '/:pathMatch(.*)*',
+    path: '/admin/:pathMatch(.*)*',
     redirect: '/sign-in',
   },
 ]

@@ -134,11 +134,12 @@ onMounted(async () => {
     if (authStore.authState.isLoggedIn && authStore.authState.token) {
       const response = await fetchUserImages();
       if (response) {
+        const apiUrl = import.meta.env.VITE_APP_HOST_API_URL || 'https://food-ai.everfortuneai.com.tw/api';
         images.value = response.map((img: Image) => ({
           image_id: img.image_id,
           is_label: img.is_label,
-          thumbnailUrl: `https://food-ai.everfortuneai.com.tw/api/images/${img.image_id}/thumbnail`,
-          fullImageUrl: `https://food-ai.everfortuneai.com.tw/api/images/${img.image_id}/view`,
+          thumbnailUrl: `${apiUrl}/images/${img.image_id}/thumbnail`,
+          fullImageUrl: `${apiUrl}/images/${img.image_id}/view`,
           editable: false,
           canSubmit: true,
         }));

@@ -34,7 +34,7 @@ export const submitImageLabels = async (
       `/images/${imageId}/label`,
       labelData,
     )
-    console.log('Label Submission Response:', response)
+    // console.log('Label Submission Response:', response)
     return response
   } catch (error) {
     console.error('Error during label submission:', error)
@@ -59,7 +59,7 @@ export const fetchImageLabelHistory = async (imageId: string): Promise<any> => {
 export const fetchHistoryData = async (): Promise<any> => {
   try {
     const response = await axiosInstance.get('/admin/user/images/labels')
-    console.log('API Response:', response)
+    // console.log('API Response:', response)
     return response
   } catch (error) {
     console.error('Error fetching history data:', error)

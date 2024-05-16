@@ -71,14 +71,15 @@ const paginatedHistoryItems = computed(() => {
 
 const totalPages = computed(() => Math.ceil(filteredHistoryItems.value.length / pageSize.value))
 
+// function getThumbnailUrl(imageId: string) {
+//   return `https://food-ai.efaipd.com/api/images/${imageId}/thumbnail`
+// }
+
 function getThumbnailUrl(imageId: string) {
-  return `https://food-ai.everfortuneai.com.tw/api${imageId}/thumbnail`
+  const apiUrl = import.meta.env.VITE_APP_HOST_API_URL || 'https://food-ai.everfortuneai.com.tw/api';
+  return `${apiUrl}/images/${imageId}/thumbnail`;
 }
 
-// function getThumbnailUrl(imageId: string) {
-//   const apiUrl = import.meta.env.VITE_APP_HOST_API_URL;
-//   return `${apiUrl}/images/${imageId}/thumbnail`;
-// }
 
 </script>
 

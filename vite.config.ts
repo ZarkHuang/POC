@@ -47,5 +47,7 @@ export default defineConfig({
         secure: false,
       },
     },
+    host: true,
+    port: 3000,
   }, 
 })
