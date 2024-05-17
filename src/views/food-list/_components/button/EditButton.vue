@@ -1,5 +1,5 @@
 <template>
-  <NButton :disabled="isDisabled || !hasData" @click="toggleEditing">
+  <NButton :disabled="isDisabled" @click="toggleEditing">
     <NIcon :component="isEditing ? Checkmark : Edit" />
   </NButton>
 </template>
@@ -11,18 +11,12 @@ import { Checkmark, Edit } from '@vicons/carbon';
 
 const props = defineProps({
   isEditing: Boolean,
-  isDisabled: Boolean,
-  hasData: Boolean  // 新增prop來判斷是否有資料
+  isDisabled: Boolean
 });
 
 const emit = defineEmits(['update:isEditing']);
 
 function toggleEditing() {
-  if (!props.hasData) {
-    // 如果沒有資料，顯示提示
-    emit('noData');
-  } else if (!props.isDisabled) {
-    emit('update:isEditing', !props.isEditing);
-  }
+  emit('update:isEditing', !props.isEditing);
 }
 </script>

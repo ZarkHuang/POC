@@ -1,9 +1,6 @@
 <template>
   <NDrawer v-model:show="active" :width="600" :placement="placement">
     <NDrawerContent title="歷史紀錄">
-      <div class="drawer-header">
-        <NInput v-model:value="searchQuery" placeholder="搜尋..." />
-      </div>
       <div class="history-list">
         <div class="history-item" v-for="(item, index) in paginatedHistoryItems" :key="index">
           <div class="history-image-container">
@@ -22,7 +19,7 @@
           </div>
         </div>
       </div>
-      <div class="drawer-footer">
+      <div  class="drawer-footer">
         <NPagination v-model:page="currentPage" :page-size="pageSize" :page-count="totalPages" show-size-picker />
       </div>
     </NDrawerContent>
@@ -31,7 +28,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { NInput, NPagination, NDrawer, NDrawerContent } from 'naive-ui'
+import { NPagination, NDrawer, NDrawerContent } from 'naive-ui'
 import type { DrawerPlacement } from 'naive-ui'
 import { HistoryItem } from '@/types/index.ts';
 
@@ -40,11 +37,12 @@ const placement = ref<DrawerPlacement>('right')
 const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(5)
-const historyItems = ref<HistoryItem[]>([]) // 使用定義的類型
+const historyItems = ref<HistoryItem[]>([])
 
 const props = defineProps<{
   historyData: HistoryItem[]
 }>()
+
 
 watch(() => props.historyData, (newData) => {
   historyItems.value = newData
@@ -70,16 +68,10 @@ const paginatedHistoryItems = computed(() => {
 })
 
 const totalPages = computed(() => Math.ceil(filteredHistoryItems.value.length / pageSize.value))
-
-// function getThumbnailUrl(imageId: string) {
-//   return `https://food-ai.efaipd.com/api/images/${imageId}/thumbnail`
-// }
-
 function getThumbnailUrl(imageId: string) {
   const apiUrl = import.meta.env.VITE_APP_HOST_API_URL || 'https://food-ai.everfortuneai.com.tw/api';
   return `${apiUrl}/images/${imageId}/thumbnail`;
 }
-
 
 </script>
 

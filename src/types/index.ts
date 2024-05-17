@@ -64,3 +64,16 @@ export interface HistoryItem {
   label_list: Label[];
   updated_at: string;
 }
+
+export interface TableItem {
+  '食物(麵、飯、麵包、蔬菜..等等)': string;
+  '烹飪方式 (炸、烤、煎、炒、滷...等等)': string;
+  '數量': string;
+  '單位': string;
+  '熱量': string;
+  '蛋白質': string;
+  '脂質': string;
+  '碳水化合物': string;
+  '創建時間': string;
+  [key: string]: string;
+}
