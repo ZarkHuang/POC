@@ -8,7 +8,7 @@ const router = useRouter()
 
 function handleSignOutClick() {
   authStore.logOut()
-  router.push('/sign-in')
+  router.push('/admin/sign-in')
 }
 </script>
 

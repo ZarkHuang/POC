@@ -12,6 +12,10 @@ const routes: RouteRecordRaw[] = [
     redirect: '/admin',
   },
   {
+    path: '/sign-in',
+    redirect: '/admin/sign-in',
+  },
+  {
     path: '/admin/sign-in',
     name: 'sign-in',
     meta: { layout: AuthPageLayout },
@@ -25,9 +29,10 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/admin/:pathMatch(.*)*',
-    redirect: '/sign-in',
+    redirect: '/admin/sign-in',
   },
 ]
+
 
 const router = createRouter({
   history: createWebHistory(),
