@@ -164,6 +164,7 @@ async function fetchLabelHistoryForSelectedImage() {
         tableData.value = [];
       }
     } catch (error) {
+      
       console.error('Error fetching label history:', error);
     }
   }
