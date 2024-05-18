@@ -66,6 +66,7 @@ export interface HistoryItem {
 }
 
 export interface TableItem {
+  [key: string]: string;
   食物: string;
   烹飪方式: string;
   數量: string;
