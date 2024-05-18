@@ -144,7 +144,6 @@ const historyData = ref([]);
 const tableData = ref<TableItem[]>([createEmptyItem()]);
 const isEditing = ref(true);
 const recognitionData: Ref<any[]> = ref([]);
-const editableData = ref([createEmptyItem()]);
 
 onMounted(async () => {
   try {
@@ -187,8 +186,8 @@ async function fetchLabelHistoryForSelectedImage() {
 }
 function formatHistoryData(historyData: any[]) {
   return historyData.map(item => ({
-    '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
-    '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
+    '食物': item.food_name,
+    '烹飪方式': item.cooking_method,
     '數量': item.quantity,
     '單位': item.quantity_name,
     '熱量': item.calories,
@@ -239,10 +238,10 @@ function confirmSubmit(image: Image) {
 
 async function submitForm(image: Image) {
   const labelData = tableData.value.map(item => ({
-    food_name: item['食物(麵、飯、麵包、蔬菜..等等)'],
+    food_name: item['食物'],
     quantity_name: item['單位'],
     quantity: parseFloat(item['數量']),
-    cooking_method: item['烹飪方式 (炸、烤、煎、炒、滷...等等)'],
+    cooking_method: item['烹飪方式'],
     calories: parseFloat(item['熱量']),
     protein: parseFloat(item['蛋白質']),
     lipids: parseFloat(item['脂質']),
@@ -280,13 +279,7 @@ function validateLabelData(labelData: any[]): { isValid: boolean, errors: string
 
   labelData.forEach((item, index) => {
     if (!item.food_name) errors.push(`第 ${index + 1} 行的食物名稱為必填項目`);
-    if (!item.quantity_name) errors.push(`第 ${index + 1} 行的數量單位為必填項目`);
     if (!item.cooking_method) errors.push(`第 ${index + 1} 行的烹飪方式為必填項目`);
-    if (item.quantity <= 0) errors.push(`第 ${index + 1} 行的數量必須大於 0`);
-    if (item.calories <= 0) errors.push(`第 ${index + 1} 行的熱量必須大於 0`);
-    if (item.protein <= 0) errors.push(`第 ${index + 1} 行的蛋白質必須大於 0`);
-    if (item.lipids <= 0) errors.push(`第 ${index + 1} 行的脂質必須大於 0`);
-    if (item.carbohydrate <= 0) errors.push(`第 ${index + 1} 行的碳水化合物必須大於 0`);
   });
 
   return {
@@ -295,21 +288,29 @@ function validateLabelData(labelData: any[]): { isValid: boolean, errors: string
   };
 }
 
+
+
+
 function handleRecognitionResult({ response, selectedIndex }: { response: any, selectedIndex: number }) {
+  console.log('response:', response)
+
   if (!response) {
     recognitionData.value = [createEmptyItem()];
+    tableData.value = [createEmptyItem()];
     return;
   }
 
   if (response.error_desc) {
-    recognitionData.value = [{ ...createEmptyItem(), '食物(麵、飯、麵包、蔬菜..等等)': response.error_desc }];
+    const errorItem = { ...createEmptyItem(), '食物': response.error_desc };
+    recognitionData.value = [errorItem];
+    tableData.value = [createEmptyItem()]; 
     return;
   }
 
   if (Array.isArray(response)) {
-    recognitionData.value = response.map(item => ({
-      '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
-      '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
+    const recognitionResults = response.map(item => ({
+      '食物': item.food_name,
+      '烹飪方式': item.cooking_method,
       '數量': String(item.quantity),
       '單位': item.quantity_name,
       '熱量': String(item.calories),
@@ -317,9 +318,29 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
       '脂質': String(item.lipids),
       '碳水化合物': String(item.carbohydrate),
     }));
+
+    // 更新辨識結果表
+    recognitionData.value = recognitionResults;
     images.value[selectedIndex].is_label = true;
+
+    // 更新資料確認表，可以根據需要選擇是否要更新某些特定欄位
+    const newItems = response.map(item => {
+      const newItem = createEmptyItem();
+      newItem['食物'] = item.food_name;
+      newItem['烹飪方式'] = item.cooking_method;
+
+      Object.keys(item).forEach(key => {
+        if (key in newItem) {
+          newItem[key] = String(item[key]); // 確保所有值都被正確轉換為字符串
+        }
+      });
+
+      return newItem;
+    });
+    tableData.value = newItems;
   } else {
     recognitionData.value = [createEmptyItem()];
+    tableData.value = [createEmptyItem()];
   }
 }
 
