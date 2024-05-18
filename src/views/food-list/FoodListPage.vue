@@ -175,7 +175,7 @@ async function fetchLabelHistoryForSelectedImage() {
     try {
       const historyData = await fetchImageLabelHistory(currentImage.image_id);
       if (historyData && historyData.length > 0) {
-        tableData.value = formatHistoryData(historyData);
+        tableData.value = formatHistoryData(historyData) ? [] : [];
       } else {
         tableData.value = [createEmptyItem()];
       }
@@ -288,11 +288,8 @@ function validateLabelData(labelData: any[]): { isValid: boolean, errors: string
   };
 }
 
-
-
-
 function handleRecognitionResult({ response, selectedIndex }: { response: any, selectedIndex: number }) {
-  console.log('response:', response)
+  console.log('response:', response);
 
   if (!response) {
     recognitionData.value = [createEmptyItem()];
@@ -303,7 +300,7 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
   if (response.error_desc) {
     const errorItem = { ...createEmptyItem(), '食物': response.error_desc };
     recognitionData.value = [errorItem];
-    tableData.value = [createEmptyItem()]; 
+    tableData.value = [createEmptyItem()];
     return;
   }
 
@@ -331,7 +328,7 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
 
       Object.keys(item).forEach(key => {
         if (key in newItem) {
-          newItem[key] = String(item[key]); // 確保所有值都被正確轉換為字符串
+          newItem[key] = String(item[key]);
         }
       });
 
@@ -343,6 +340,7 @@ function handleRecognitionResult({ response, selectedIndex }: { response: any, s
     tableData.value = [createEmptyItem()];
   }
 }
+
 
 
 function toggleDrawer() {

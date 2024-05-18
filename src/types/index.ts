@@ -66,14 +66,25 @@ export interface HistoryItem {
 }
 
 export interface TableItem {
-  '食物(麵、飯、麵包、蔬菜..等等)': string;
-  '烹飪方式 (炸、烤、煎、炒、滷...等等)': string;
-  '數量': string;
-  '單位': string;
-  '熱量': string;
-  '蛋白質': string;
-  '脂質': string;
-  '碳水化合物': string;
-  '創建時間': string;
-  [key: string]: string;
+  食物: string;
+  烹飪方式: string;
+  數量: string;
+  單位: string;
+  熱量: string;
+  蛋白質: string;
+  脂質: string;
+  碳水化合物: string;
+  創建時間: string;
+  全脂奶: string;
+  低脂奶: string;
+  脫脂奶: string;
+  主食: string;
+  高脂肉: string;
+  中脂肉: string;
+  低脂肉: string;
+  疏菜: string;
+  水果: string;
+  複糖: string;
+  油脂: string;
+  酒: string;
 }

@@ -1,37 +1,40 @@
 import { ref } from 'vue';
-import { LabelHistoryItem } from '@/types/index.ts';
+import { LabelHistoryItem, TableItem } from '@/types/index.ts';
 
 export const useFormData = () => {
-  const tableData = ref<any[]>([]);
+  const tableData = ref<TableItem[]>([]);
 
-  const formatHistoryData = (historyData: LabelHistoryItem[]) => {
+  const formatHistoryData = (historyData: LabelHistoryItem[]): TableItem[] => {
     return historyData.map(item => ({
-      '食物(麵、飯、麵包、蔬菜..等等)': item.food_name,
-      '烹飪方式 (炸、烤、煎、炒、滷...等等)': item.cooking_method,
+      '食物': item.food_name,
+      '烹飪方式': item.cooking_method,
       '數量': String(item.quantity),
       '單位': item.quantity_name,
-      '熱量 (kcal/100g)': String(item.calories),
-      '蛋白質 (g/100g)': String(item.protein),
-      '脂質 (g/100g)': String(item.lipids),
-      '碳水化合物 (g/100g)': String(item.carbohydrate),
+      '熱量': String(item.calories),
+      '蛋白質': String(item.protein),
+      '脂質': String(item.lipids),
+      '碳水化合物': String(item.carbohydrate),
+      '創建時間': item.created_at || '',
+      '全脂奶': '',
+      '低脂奶': '',
+      '脫脂奶': '',
+      '主食': '',
+      '高脂肉': '',
+      '中脂肉': '',
+      '低脂肉': '',
+      '疏菜': '',
+      '水果': '',
+      '複糖': '',
+      '油脂': '',
+      '酒': '',
     }));
   };
 
-  const addNewRow = () => {
-    const newRow = {
-      '食物(麵、飯、麵包、蔬菜..等等)': '',
-      '烹飪方式 (炸、烤、煎、炒、滷...等等)': '',
-      '數量': '0',
-      '單位': '',
-      '熱量 (kcal/100g)': '0',
-      '蛋白質 (g/100g)': '0',
-      '脂質 (g/100g)': '0',
-      '碳水化合物 (g/100g)': '0',
-    };
-    tableData.value.push(newRow);
+  const addNewRow = (): void => {
+    tableData.value.push(createEmptyItem());
   };
 
-  const removeRow = (index: number) => {
+  const removeRow = (index: number): void => {
     tableData.value.splice(index, 1);
   };
 
@@ -41,4 +44,57 @@ export const useFormData = () => {
     addNewRow,
     removeRow,
   };
+};
+
+function createEmptyItem(): TableItem {
+  return {
+    '食物': '',
+    '烹飪方式': '',
+    '數量': '0',
+    '單位': '',
+    '熱量': '0',
+    '蛋白質': '0',
+    '脂質': '0',
+    '碳水化合物': '0',
+    '創建時間': '',
+    '全脂奶': '',
+    '低脂奶': '',
+    '脫脂奶': '',
+    '主食': '',
+    '高脂肉': '',
+    '中脂肉': '',
+    '低脂肉': '',
+    '疏菜': '',
+    '水果': '',
+    '複糖': '',
+    '油脂': '',
+    '酒': ''
+  };
+}
+
+
+export const formatHistoryData = (historyData: LabelHistoryItem[]): TableItem[] => {
+  return historyData.map(item => ({
+    '食物': item.food_name,
+    '烹飪方式': item.cooking_method,
+    '數量': String(item.quantity),
+    '單位': item.quantity_name,
+    '熱量': String(item.calories),
+    '蛋白質': String(item.protein),
+    '脂質': String(item.lipids),
+    '碳水化合物': String(item.carbohydrate),
+    '創建時間': item.created_at || '',
+    '全脂奶': '',
+    '低脂奶': '',
+    '脫脂奶': '',
+    '主食': '',
+    '高脂肉': '',
+    '中脂肉': '',
+    '低脂肉': '',
+    '疏菜': '',
+    '水果': '',
+    '複糖': '',
+    '油脂': '',
+    '酒': '',
+  }));
 };
