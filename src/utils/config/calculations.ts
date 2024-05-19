@@ -24,93 +24,91 @@ export function createEmptyItem(): TableItem {
     '酒': '',
   };
 }
+export function calculateResults(type: string, items: Record<string, string | number>[]): {
+  quantity: number;
+  carbohydrate: number;
+  protein: number;
+  lipids: number;
+  total: number;
+} {
+  let totalQuantity = 0;
+  let totalCarbohydrate = 0;
+  let totalProtein = 0;
+  let totalLipids = 0;
 
-  
-  export function calculateResults(type: string, item: Record<string, string | number>) {
-    if (!item || !(type in item)) {
-      return {
-        quantity: 0,
-        carbohydrate: 0,
-        protein: 0,
-        lipids: 0,
-        total: 0
-      };
-    }
-  
+  items.forEach(item => {
     const quantity = parseFloat(item[type] as string) || 0;
-    let carbohydrate = 0;
-    let protein = 0;
-    let lipids = 0;
-  
+    totalQuantity += quantity;
+
     switch (type) {
       case '全脂奶':
-        carbohydrate = quantity * 12 * 4;
-        protein = quantity * 8 * 4;
-        lipids = quantity * 8 * 9;
+        totalCarbohydrate += quantity * 12 * 4;
+        totalProtein += quantity * 8 * 4;
+        totalLipids += quantity * 8 * 9;
         break;
       case '低脂奶':
-        carbohydrate = quantity * 12 * 4;
-        protein = quantity * 8 * 4;
-        lipids = quantity * 4 * 9;
+        totalCarbohydrate += quantity * 12 * 4;
+        totalProtein += quantity * 8 * 4;
+        totalLipids += quantity * 4 * 9;
         break;
       case '脫脂奶':
-        carbohydrate = quantity * 12 * 4;
-        protein = quantity * 8 * 4;
-        lipids = quantity * 0 * 9;
+        totalCarbohydrate += quantity * 12 * 4;
+        totalProtein += quantity * 8 * 4;
+        totalLipids += quantity * 0 * 9;
         break;
       case '主食':
-        carbohydrate = quantity * 15 * 4;
-        protein = quantity * 1.5 * 4;
-        lipids = quantity * 0 * 9;
+        totalCarbohydrate += quantity * 15 * 4;
+        totalProtein += quantity * 1.5 * 4;
+        totalLipids += quantity * 0 * 9;
         break;
       case '高脂肉':
-        carbohydrate = quantity * 0 * 4;
-        protein = quantity * 7 * 4;
-        lipids = quantity * 10 * 9;
+        totalCarbohydrate += quantity * 0 * 4;
+        totalProtein += quantity * 7 * 4;
+        totalLipids += quantity * 10 * 9;
         break;
       case '中脂肉':
-        carbohydrate = quantity * 0 * 4;
-        protein = quantity * 7 * 4;
-        lipids = quantity * 5 * 9;
+        totalCarbohydrate += quantity * 0 * 4;
+        totalProtein += quantity * 7 * 4;
+        totalLipids += quantity * 5 * 9;
         break;
       case '低脂肉':
-        carbohydrate = quantity * 0 * 4;
-        protein = quantity * 7 * 4;
-        lipids = quantity * 3 * 9;
+        totalCarbohydrate += quantity * 0 * 4;
+        totalProtein += quantity * 7 * 4;
+        totalLipids += quantity * 3 * 9;
         break;
       case '疏菜':
-        carbohydrate = quantity * 5 * 4;
-        protein = quantity * 1 * 4;
-        lipids = quantity * 0 * 9;
+        totalCarbohydrate += quantity * 5 * 4;
+        totalProtein += quantity * 1 * 4;
+        totalLipids += quantity * 0 * 9;
         break;
       case '水果':
       case '複糖':
-        carbohydrate = quantity * 15 * 4;
-        protein = quantity * 0 * 4;
-        lipids = quantity * 0 * 9;
+        totalCarbohydrate += quantity * 15 * 4;
+        totalProtein += quantity * 0 * 4;
+        totalLipids += quantity * 0 * 9;
         break;
       case '油脂':
-        carbohydrate = quantity * 0 * 4;
-        protein = quantity * 0 * 4;
-        lipids = quantity * 5 * 9;
+        totalCarbohydrate += quantity * 0 * 4;
+        totalProtein += quantity * 0 * 4;
+        totalLipids += quantity * 5 * 9;
         break;
       case '酒':
-        carbohydrate = quantity * 0 * 4;
-        protein = quantity * 0 * 4;
-        lipids = quantity * 10 * 9;
+        totalCarbohydrate += quantity * 0 * 4;
+        totalProtein += quantity * 0 * 4;
+        totalLipids += quantity * 10 * 9;
         break;
       default:
         break;
     }
-  
-    const total = carbohydrate + protein + lipids;
-  
-    return {
-      quantity,
-      carbohydrate,
-      protein,
-      lipids,
-      total
-    };
-  }
-  
+  });
+
+  const total = totalCarbohydrate + totalProtein + totalLipids;
+
+  return {
+    quantity: totalQuantity,
+    carbohydrate: totalCarbohydrate,
+    protein: totalProtein,
+    lipids: totalLipids,
+    total
+  };
+}

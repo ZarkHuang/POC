@@ -95,11 +95,11 @@
                 <tbody>
                   <tr v-for="(result, index) in tableResluts" :key="index">
                     <td>{{ result }}</td>
-                    <td>{{ calculateResults(result, tableData[0]).quantity }}</td>
-                    <td>{{ calculateResults(result, tableData[0]).carbohydrate }}</td>
-                    <td>{{ calculateResults(result, tableData[0]).protein }}</td>
-                    <td>{{ calculateResults(result, tableData[0]).lipids }}</td>
-                    <td>{{ calculateResults(result, tableData[0]).total }}</td>
+                    <td>{{ calculateResults(result, tableData).quantity }}</td>
+                  <td>{{ calculateResults(result, tableData).carbohydrate }}</td>
+                  <td>{{ calculateResults(result, tableData).protein }}</td>
+                  <td>{{ calculateResults(result, tableData).lipids }}</td>
+                  <td>{{ calculateResults(result, tableData).total }}</td>
                   </tr>
                 </tbody>
               </NTable>
