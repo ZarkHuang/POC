@@ -1,6 +1,6 @@
 <template>
   <NDrawer v-model:show="active" :width="600" :placement="placement">
-    <NDrawerContent title="歷史紀錄">
+    <NDrawerContent title="AI辨識歷史紀錄">
       <div class="history-list">
         <div class="history-item" v-for="(item, index) in paginatedHistoryItems" :key="index">
           <div class="history-image-container">
