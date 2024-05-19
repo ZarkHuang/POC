@@ -6,20 +6,20 @@
           <div class="history-image-container">
             <img :src="getThumbnailUrl(item.image_id)" alt="Food Image" class="history-image" />
           </div>
-          <div class="history-details" v-if="item.label_list && item.label_list.length > 0">
-            <p><strong>食物：</strong>{{ item.label_list[0].food_name }}</p>
-            <p><strong>烹煮方式：</strong>{{ item.label_list[0].cooking_method }}</p>
-            <p><strong>數量：</strong>{{ item.label_list[0].quantity }}</p>
-            <p><strong>單位：</strong>{{ item.label_list[0].quantity_name }}</p>
-            <p><strong>熱量：</strong>{{ item.label_list[0].calories }} kcal</p>
-            <p><strong>蛋白質：</strong>{{ item.label_list[0].protein }} g</p>
-            <p><strong>脂質：</strong>{{ item.label_list[0].lipids }} g</p>
-            <p><strong>碳水化合物：</strong>{{ item.label_list[0].carbohydrate }} g</p>
+          <div class="history-details" v-if="item.ai_list && item.ai_list.length > 0">
+            <p><strong>食物：</strong>{{ item.ai_list[0].food_name }}</p>
+            <p><strong>烹煮方式：</strong>{{ item.ai_list[0].cooking_method }}</p>
+            <p><strong>數量：</strong>{{ item.ai_list[0].quantity }}</p>
+            <p><strong>單位：</strong>{{ item.ai_list[0].quantity_name }}</p>
+            <p><strong>熱量：</strong>{{ item.ai_list[0].calories }} kcal</p>
+            <p><strong>蛋白質：</strong>{{ item.ai_list[0].protein }} g</p>
+            <p><strong>脂質：</strong>{{ item.ai_list[0].lipids }} g</p>
+            <p><strong>碳水化合物：</strong>{{ item.ai_list[0].carbohydrate }} g</p>
             <p><strong>提交時間：</strong>{{ item.updated_at }}</p>
           </div>
         </div>
       </div>
-      <div  class="drawer-footer">
+      <div class="drawer-footer">
         <NPagination v-model:page="currentPage" :page-size="pageSize" :page-count="totalPages" show-size-picker />
       </div>
     </NDrawerContent>
@@ -51,12 +51,12 @@ watch(() => props.historyData, (newData) => {
 const filteredHistoryItems = computed(() => {
   const query = searchQuery.value.toLowerCase()
   return historyItems.value.filter(item =>
-    item.label_list &&
-    item.label_list.length > 0 &&
+    item.ai_list &&
+    item.ai_list.length > 0 &&
     (
-      item.label_list[0].food_name.toLowerCase().includes(query) ||
-      item.label_list[0].cooking_method.toLowerCase().includes(query) ||
-      item.label_list[0].quantity_name.toLowerCase().includes(query)
+      item.ai_list[0].food_name.toLowerCase().includes(query) ||
+      item.ai_list[0].cooking_method.toLowerCase().includes(query) ||
+      item.ai_list[0].quantity_name.toLowerCase().includes(query)
     )
   )
 })
@@ -74,6 +74,7 @@ function getThumbnailUrl(imageId: string) {
 }
 
 </script>
+
 
 <style scoped>
 .drawer-header {

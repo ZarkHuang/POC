@@ -22,7 +22,6 @@ export interface FormData {
   lipids: number;
   carbohydrate: number;
   quantity_name: string;
-  created_at?: string;
 }
 
 export interface Image {
@@ -45,7 +44,6 @@ export interface LabelHistoryItem {
   protein: number;
   lipids: number;
   carbohydrate: number;
-  created_at: string;
 }
 
 export interface Label {
@@ -62,6 +60,7 @@ export interface Label {
 export interface HistoryItem {
   image_id: string;
   label_list: Label[];
+  ai_list: Label[];
   updated_at: string;
 }
 
@@ -75,7 +74,6 @@ export interface TableItem {
   蛋白質: string;
   脂質: string;
   碳水化合物: string;
-  創建時間: string;
   全脂奶: string;
   低脂奶: string;
   脫脂奶: string;

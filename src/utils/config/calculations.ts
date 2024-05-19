@@ -10,7 +10,6 @@ export function createEmptyItem(): TableItem {
     '蛋白質': '',
     '脂質': '',
     '碳水化合物': '',
-    '創建時間': '',
     '全脂奶': '',
     '低脂奶': '',
     '脫脂奶': '',

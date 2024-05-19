@@ -48,7 +48,7 @@
                   <NButton @click="addNewRow" type="primary">
                     新增欄位
                   </NButton>
-                  <EditButton :isEditing="isEditing" @update:isEditing="isEditing = $event" />
+                  <!-- <EditButton :isEditing="isEditing" @update:isEditing="isEditing = $event" /> -->
                 </div>
               </NGi>
             </NGrid>
@@ -122,7 +122,7 @@ import { Image , TableItem } from '@/types/index.ts';
 import ImageSelector from '@/views/food-list/ImageSelector.vue';
 import ImageCarousel from '@/views/food-list/ImageCarousel.vue';
 import RecognitionResultTable from '@/views/food-list/RecognitionResultTable.vue';
-import EditButton from '@/views/food-list/_components/button/EditButton.vue';
+// import EditButton from '@/views/food-list/_components/button/EditButton.vue';
 import HistoryDrawer from '@/views/food-list/_components/drawer/HistoryDrawer.vue';
 import { fetchUserImages, fetchImageLabelHistory, submitImageLabels, fetchHistoryData } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
@@ -142,7 +142,7 @@ const isLoadingImage = ref(false);
 const drawerVisible = ref(false);
 const historyData = ref([]);
 const tableData = ref<TableItem[]>([createEmptyItem()]);
-const isEditing = ref(true);
+// const isEditing = ref(true);
 const recognitionData: Ref<any[]> = ref([]);
 
 onMounted(async () => {
@@ -159,7 +159,53 @@ onMounted(async () => {
           editable: false,
           canSubmit: true,
         }));
+
         await fetchLabelHistoryForSelectedImage();
+
+        // Fetch history data on initial load
+        const historyResponse = await fetchHistoryData();
+        // console.log('Initial History Data Response:', historyResponse);
+
+        if (historyResponse) {
+          const data = Array.isArray(historyResponse) ? historyResponse : historyResponse.data;
+          const initialImageHistory = data.find(item => item.image_id === images.value[selectedImage.value].image_id);
+
+          if (initialImageHistory && initialImageHistory.ai_list) {
+            recognitionData.value = initialImageHistory.ai_list.map(aiItem => ({
+              '食物': aiItem.food_name,
+              '烹飪方式': aiItem.cooking_method,
+              '數量': String(aiItem.quantity),
+              '單位': aiItem.quantity_name,
+              '熱量': String(aiItem.calories),
+              '蛋白質': String(aiItem.protein),
+              '脂質': String(aiItem.lipids),
+              '碳水化合物': String(aiItem.carbohydrate),
+            }));
+          } else {
+            recognitionData.value = [createEmptyItem()];
+          }
+
+          if (initialImageHistory && initialImageHistory.label_list) {
+            tableData.value = initialImageHistory.label_list.map(labelItem => ({
+              '食物': labelItem.food_name,
+              '烹飪方式': labelItem.cooking_method,
+              '全脂奶': String(labelItem.whole_milk_quantity),
+              '低脂奶': String(labelItem.low_fat_milk_quantity),
+              '脫脂奶': String(labelItem.skim_milk_quantity),
+              '主食': String(labelItem.staple_foods_quantity),
+              '高脂肉': String(labelItem.high_fat_meat_quantity),
+              '中脂肉': String(labelItem.medium_fat_meat_quantity),
+              '低脂肉': String(labelItem.low_fat_meat_quantity),
+              '疏菜': String(labelItem.vegetables_quantity),
+              '水果': String(labelItem.fruit_complex_sugar_quantity),
+              '複糖': String(labelItem.fruit_complex_sugar_quantity),
+              '油脂': String(labelItem.grease_quantity),
+              '酒': String(labelItem.guzzle_quantity),
+            }));
+          } else {
+            tableData.value = [createEmptyItem()];
+          }
+        }
       }
     }
   } catch (error) {
@@ -169,13 +215,14 @@ onMounted(async () => {
   }
 });
 
+
 async function fetchLabelHistoryForSelectedImage() {
   if (selectedImage.value !== null && images.value.length > 0 && selectedImage.value < images.value.length) {
     const currentImage = images.value[selectedImage.value];
     try {
       const historyData = await fetchImageLabelHistory(currentImage.image_id);
       if (historyData && historyData.length > 0) {
-        tableData.value = formatHistoryData(historyData) ? [] : [];
+        tableData.value = formatHistoryData(historyData);
       } else {
         tableData.value = [createEmptyItem()];
       }
@@ -194,7 +241,6 @@ function formatHistoryData(historyData: any[]) {
     '蛋白質': item.protein,
     '脂質': item.lipids,
     '碳水化合物': item.carbohydrate,
-    '創建時間': item.created_at
   }));
 }
 
@@ -211,7 +257,59 @@ async function updateSelectedImage(index: number) {
   isLoadingImage.value = true;
   await fetchLabelHistoryForSelectedImage();
   isLoadingImage.value = false;
+
+  fetchHistoryData().then(response => {
+    // console.log('History Data Response:', response);
+    if (response) {
+      const data = Array.isArray(response) ? response : response.data;
+      // console.log('有資料？', data);
+      const imageHistory = data.find(item => item.image_id === images.value[selectedImage.value].image_id);
+      console.log('Image History:', imageHistory); 
+
+      if (imageHistory && imageHistory.ai_list) {
+        recognitionData.value = imageHistory.ai_list.map(aiItem => ({
+          '食物': aiItem.food_name,
+          '烹飪方式': aiItem.cooking_method,
+          '數量': String(aiItem.quantity),
+          '單位': aiItem.quantity_name,
+          '熱量': String(aiItem.calories),
+          '蛋白質': String(aiItem.protein),
+          '脂質': String(aiItem.lipids),
+          '碳水化合物': String(aiItem.carbohydrate),
+        }));
+      } else {
+        recognitionData.value = [createEmptyItem()];
+      }
+      if (imageHistory && imageHistory.label_list) {
+        tableData.value = imageHistory.label_list.map(labelItem => ({
+          '食物': labelItem.food_name,
+          '烹飪方式': labelItem.cooking_method,
+          '全脂奶': String(labelItem.whole_milk_quantity),
+          '低脂奶': String(labelItem.low_fat_milk_quantity),
+          '脫脂奶': String(labelItem.skim_milk_quantity),
+          '主食': String(labelItem.staple_foods_quantity),
+          '高脂肉': String(labelItem.high_fat_meat_quantity),
+          '中脂肉': String(labelItem.medium_fat_meat_quantity),
+          '低脂肉': String(labelItem.low_fat_meat_quantity),
+          '疏菜': String(labelItem.vegetables_quantity),
+          '水果': String(labelItem.fruit_complex_sugar_quantity),
+          '複糖': String(labelItem.fruit_complex_sugar_quantity),
+          '油脂': String(labelItem.grease_quantity),
+          '酒': String(labelItem.guzzle_quantity),
+        }));
+      } else {
+        tableData.value = [createEmptyItem()];
+      }
+    } else {
+      console.error('Invalid response structure:', response);
+      recognitionData.value = [createEmptyItem()];
+      tableData.value = [createEmptyItem()];
+    }
+  }).catch(error => {
+    console.error('Error fetching history data:', error);
+  });
 }
+
 
 function confirmSubmit(image: Image) {
   if (image.editable) {
@@ -239,18 +337,42 @@ function confirmSubmit(image: Image) {
 async function submitForm(image: Image) {
   const labelData = tableData.value.map(item => ({
     food_name: item['食物'],
-    quantity_name: item['單位'],
-    quantity: parseFloat(item['數量']),
     cooking_method: item['烹飪方式'],
-    calories: parseFloat(item['熱量']),
-    protein: parseFloat(item['蛋白質']),
-    lipids: parseFloat(item['脂質']),
-    carbohydrate: parseFloat(item['碳水化合物']),
-    created_at: item['創建時間']
+    whole_milk_quantity: parseFloat(item['全脂奶']) || 0,
+    low_fat_milk_quantity: parseFloat(item['低脂奶']) || 0,
+    skim_milk_quantity: parseFloat(item['脫脂奶']) || 0,
+    staple_foods_quantity: parseFloat(item['主食']) || 0,
+    high_fat_meat_quantity: parseFloat(item['高脂肉']) || 0,
+    medium_fat_meat_quantity: parseFloat(item['中脂肉']) || 0,
+    low_fat_meat_quantity: parseFloat(item['低脂肉']) || 0,
+    vegetables_quantity: parseFloat(item['疏菜']) || 0,
+    fruit_complex_sugar_quantity: parseFloat(item['水果']) || 0,
+    grease_quantity: parseFloat(item['油脂']) || 0,
+    guzzle_quantity: parseFloat(item['酒']) || 0,
   }));
 
-  const { isValid, errors } = validateLabelData(labelData);
+  // 從 AI 認識結果中提取數據
+  const aiData = recognitionData.value.map(item => ({
+    food_name: item['食物'],
+    quantity_name: item['單位'],
+    quantity: parseInt(item['數量'], 10) || 0,
+    cooking_method: item['烹飪方式'],
+    calories: parseFloat(item['熱量']) || 0,
+    protein: parseFloat(item['蛋白質']) || 0,
+    lipids: parseFloat(item['脂質']) || 0,
+    carbohydrate: parseFloat(item['碳水化合物']) || 0
+  }));
 
+  // 準備提交到 API 的資料
+  const submissionPayload = {
+    label_data: labelData,
+    ai_data: aiData.length > 0 ? aiData : []
+  };
+
+  console.log('submissionPayload:', submissionPayload);
+
+  // 提交前的資料驗證
+  const { isValid, errors } = validateLabelData(labelData.concat(aiData));
   if (!isValid) {
     message.warning('資料不完整或格式不正確，請檢查並填寫所有必填項目。');
     errors.forEach(error => {
@@ -259,11 +381,14 @@ async function submitForm(image: Image) {
     return;
   }
 
-  const submissionPayload = { label_data: labelData };
   isSubmitting.value = true;
   try {
-    const response = await submitImageLabels(image.image_id, submissionPayload);
-    console.log('Response:', response);
+      const response = await submitImageLabels(image.image_id, submissionPayload);
+      console.log('Response:', response);
+      const imageIndex = images.value.findIndex(img => img.image_id === image.image_id);
+    if (imageIndex !== -1) {
+      images.value[imageIndex].is_label = true;
+    }
     fetchLabelHistoryForSelectedImage();
     message.success('資料提交成功');
   } catch (error) {
@@ -273,11 +398,15 @@ async function submitForm(image: Image) {
     isSubmitting.value = false;
   }
 }
-
 function validateLabelData(labelData: any[]): { isValid: boolean, errors: string[] } {
   const errors: string[] = [];
 
-  labelData.forEach((item, index) => {
+  // 過濾掉空行
+  const nonEmptyData = labelData.filter(item => 
+    item.food_name || item.cooking_method || item.quantity || item.calories || item.protein || item.lipids || item.carbohydrate || item.quantity_name
+  );
+
+  nonEmptyData.forEach((item, index) => {
     if (!item.food_name) errors.push(`第 ${index + 1} 行的食物名稱為必填項目`);
     if (!item.cooking_method) errors.push(`第 ${index + 1} 行的烹飪方式為必填項目`);
   });
@@ -287,6 +416,7 @@ function validateLabelData(labelData: any[]): { isValid: boolean, errors: string
     errors
   };
 }
+
 
 function handleRecognitionResult({ response, selectedIndex }: { response: any, selectedIndex: number }) {
   console.log('response:', response);

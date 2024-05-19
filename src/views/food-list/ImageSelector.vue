@@ -9,8 +9,8 @@
           <NButton :class="['image-button', { selected: index === selectedImage }]" @click="selectImage(index)">
             <div class="image-container">
               <NSpin :show="isRecognizing && index === selectedImage">
-              <img :src="image.url" :alt="'Image ' + (index + 1)" loading="lazy" class="image-preview" />
-            </NSpin>
+                <img :src="image.url" :alt="'Image ' + (index + 1)" loading="lazy" class="image-preview" />
+              </NSpin>
               <NIcon v-if="image.is_label" size="24" :component="CheckmarkFilled" class="label-icon" />
             </div>
           </NButton>
@@ -75,6 +75,7 @@ function checkScrollPosition() {
     container.scrollTop + container.clientHeight >= container.scrollHeight
 }
 </script>
+
 
 <style scoped>
 .image-button {
