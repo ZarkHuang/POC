@@ -1,4 +1,6 @@
 import { TableItem } from '@/types/index.ts';
+import { HistoryItem } from '@/types/index.ts';
+
 
 export function createEmptyItem(): TableItem {
   return {
@@ -111,4 +113,37 @@ export function calculateResults(type: string, items: Record<string, string | nu
     lipids: totalLipids,
     total
   };
+}
+
+
+export function getFoodNames(item: HistoryItem) {
+  return item.ai_list.map(ai => ai.food_name).join('、');
+}
+
+export function getCookingMethods(item: HistoryItem) {
+  return item.ai_list.map(ai => ai.cooking_method).join('、');
+}
+
+export function getQuantities(item: HistoryItem) {
+  return item.ai_list.map(ai => ai.quantity).join('、');
+}
+
+export function getQuantityNames(item: HistoryItem) {
+  return item.ai_list.map(ai => ai.quantity_name).join('、');
+}
+
+export function getTotalCalories(item: HistoryItem) {
+  return item.ai_list.reduce((sum, ai) => sum + ai.calories, 0);
+}
+
+export function getTotalProtein(item: HistoryItem) {
+  return item.ai_list.reduce((sum, ai) => sum + ai.protein, 0);
+}
+
+export function getTotalLipids(item: HistoryItem) {
+  return item.ai_list.reduce((sum, ai) => sum + ai.lipids, 0);
+}
+
+export function getTotalCarbohydrates(item: HistoryItem) {
+  return item.ai_list.reduce((sum, ai) => sum + ai.carbohydrate, 0);
 }

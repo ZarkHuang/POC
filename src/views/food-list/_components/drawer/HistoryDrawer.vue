@@ -2,20 +2,25 @@
   <NDrawer v-model:show="active" :width="600" :placement="placement">
     <NDrawerContent title="AI辨識歷史紀錄">
       <div class="history-list">
-        <div class="history-item" v-for="(item, index) in paginatedHistoryItems" :key="index">
+        <div
+          class="history-item"
+          v-for="(item, index) in paginatedHistoryItems"
+          :key="index"
+          @click="handleHistoryItemClick(item.image_id)"
+        >
           <div class="history-image-container">
             <img :src="getThumbnailUrl(item.image_id)" alt="Food Image" class="history-image" />
           </div>
-          <div class="history-details" v-if="item.ai_list && item.ai_list.length > 0">
-            <p><strong>食物：</strong>{{ item.ai_list[0].food_name }}</p>
-            <p><strong>烹煮方式：</strong>{{ item.ai_list[0].cooking_method }}</p>
-            <p><strong>數量：</strong>{{ item.ai_list[0].quantity }}</p>
-            <p><strong>單位：</strong>{{ item.ai_list[0].quantity_name }}</p>
-            <p><strong>熱量：</strong>{{ item.ai_list[0].calories }} kcal</p>
-            <p><strong>蛋白質：</strong>{{ item.ai_list[0].protein }} g</p>
-            <p><strong>脂質：</strong>{{ item.ai_list[0].lipids }} g</p>
-            <p><strong>碳水化合物：</strong>{{ item.ai_list[0].carbohydrate }} g</p>
-            <p><strong>提交時間：</strong>{{ item.updated_at }}</p>
+          <div class="history-details">
+            <p><strong>食物：</strong>{{ getFoodNames(item) }}</p>
+            <p><strong>烹煮方式：</strong>{{ getCookingMethods(item) }}</p>
+            <p><strong>數量：</strong>{{ getQuantities(item) }}</p>
+            <p><strong>單位：</strong>{{ getQuantityNames(item) }}</p>
+            <p><strong>熱量：</strong>{{ getTotalCalories(item) }} kcal</p>
+            <p><strong>蛋白質：</strong>{{ getTotalProtein(item) }} g</p>
+            <p><strong>脂質：</strong>{{ getTotalLipids(item) }} g</p>
+            <p><strong>碳水化合物：</strong>{{ getTotalCarbohydrates(item) }} g</p>
+            <p><strong>AI辨識時間：</strong>{{ item.updated_at }}</p>
           </div>
         </div>
       </div>
@@ -31,6 +36,7 @@ import { ref, computed, watch } from 'vue'
 import { NPagination, NDrawer, NDrawerContent } from 'naive-ui'
 import type { DrawerPlacement } from 'naive-ui'
 import { HistoryItem } from '@/types/index.ts';
+import { getFoodNames, getCookingMethods, getQuantities, getQuantityNames, getTotalCalories, getTotalProtein, getTotalLipids, getTotalCarbohydrates } from '@/utils/config/calculations.ts';
 
 const active = ref(false)
 const placement = ref<DrawerPlacement>('right')
@@ -43,6 +49,7 @@ const props = defineProps<{
   historyData: HistoryItem[]
 }>()
 
+const emit = defineEmits(['selectHistoryItem'])
 
 watch(() => props.historyData, (newData) => {
   historyItems.value = newData
@@ -54,9 +61,9 @@ const filteredHistoryItems = computed(() => {
     item.ai_list &&
     item.ai_list.length > 0 &&
     (
-      item.ai_list[0].food_name.toLowerCase().includes(query) ||
-      item.ai_list[0].cooking_method.toLowerCase().includes(query) ||
-      item.ai_list[0].quantity_name.toLowerCase().includes(query)
+      item.ai_list.some(ai => ai.food_name.toLowerCase().includes(query)) ||
+      item.ai_list.some(ai => ai.cooking_method.toLowerCase().includes(query)) ||
+      item.ai_list.some(ai => ai.quantity_name.toLowerCase().includes(query))
     )
   )
 })
@@ -68,11 +75,16 @@ const paginatedHistoryItems = computed(() => {
 })
 
 const totalPages = computed(() => Math.ceil(filteredHistoryItems.value.length / pageSize.value))
+
 function getThumbnailUrl(imageId: string) {
   const apiUrl = import.meta.env.VITE_APP_HOST_API_URL || 'https://food-ai.everfortuneai.com.tw/api';
   return `${apiUrl}/images/${imageId}/thumbnail`;
 }
 
+function handleHistoryItemClick(imageId: string) {
+  // console.log('success')
+  emit('selectHistoryItem', imageId);
+}
 </script>
 
 
@@ -97,6 +109,7 @@ function getThumbnailUrl(imageId: string) {
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 
 .history-image-container {

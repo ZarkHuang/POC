@@ -107,7 +107,7 @@
         </NScrollbar>
       </NGi>
     </NGrid>
-    <HistoryDrawer v-model:show="drawerVisible" :historyData="historyData" />
+    <HistoryDrawer v-model:show="drawerVisible" :historyData="historyData" @selectHistoryItem="handleHistoryItemSelect"/>
     <Button @click="toggleDrawer" class="history-button" type="primary">
       <NIcon size="20" :component="ChevronLeft" />
     </Button>
@@ -160,11 +160,9 @@ onMounted(async () => {
         }));
 
         await fetchLabelHistoryForSelectedImage();
-
         // Fetch history data on initial load
         const historyResponse = await fetchHistoryData();
         // console.log('Initial History Data Response:', historyResponse);
-
         if (historyResponse) {
           const data = Array.isArray(historyResponse) ? historyResponse : historyResponse.data;
           const initialImageHistory = data.find((item: { image_id: string; }) => item.image_id === images.value[selectedImage.value].image_id);
@@ -183,7 +181,6 @@ onMounted(async () => {
           } else {
             recognitionData.value = [createEmptyItem()];
           }
-
           if (initialImageHistory && initialImageHistory.label_list) {
             tableData.value = initialImageHistory.label_list.map((labelItem: { food_name: any; cooking_method: any; whole_milk_quantity: any; low_fat_milk_quantity: any; skim_milk_quantity: any; staple_foods_quantity: any; high_fat_meat_quantity: any; medium_fat_meat_quantity: any; low_fat_meat_quantity: any; vegetables_quantity: any; fruit_complex_sugar_quantity: any; grease_quantity: any; guzzle_quantity: any; }) => ({
               '食物': labelItem.food_name,
@@ -213,6 +210,14 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
+
+async function handleHistoryItemSelect(imageId: string) {
+  const imageIndex = images.value.findIndex(img => img.image_id === imageId);
+  if (imageIndex !== -1) {
+    selectedImage.value = imageIndex;
+    await updateSelectedImage(imageIndex);
+  }
+}
 
 async function fetchLabelHistoryForSelectedImage() {
   if (selectedImage.value !== null && images.value.length > 0 && selectedImage.value < images.value.length) {
@@ -271,13 +276,9 @@ async function updateSelectedImage(index: number) {
   isLoadingImage.value = false;
 
   fetchHistoryData().then(response => {
-    // console.log('History Data Response:', response);
     if (response) {
       const data = Array.isArray(response) ? response : response.data;
-      // console.log('有資料？', data);
       const imageHistory = data.find((item: { image_id: string; }) => item.image_id === images.value[selectedImage.value].image_id);
-      console.log('Image History:', imageHistory); 
-
       if (imageHistory && imageHistory.ai_list) {
         recognitionData.value = imageHistory.ai_list.map((aiItem: { food_name: any; cooking_method: any; quantity: any; quantity_name: any; calories: any; protein: any; lipids: any; carbohydrate: any; }) => ({
           '食物': aiItem.food_name,
@@ -425,10 +426,8 @@ async function submitForm(image: Image) {
     if (imageIndex !== -1) {
       images.value[imageIndex].is_label = true;
     }
-    // 這裡再調用fetchHistoryData來獲取最新的數據
-    await fetchHistoryData();
+
     message.success('資料提交成功');
-    await updateRecognitionData(image.image_id);
   } catch (error) {
     console.error('提交失敗:', error);
     message.error('提交失敗');
@@ -436,31 +435,6 @@ async function submitForm(image: Image) {
     isSubmitting.value = false;
   }
 }
-
-async function updateRecognitionData(imageId: string) {
-  try {
-    const historyData = await fetchImageLabelHistory(imageId);
-    if (historyData && historyData.length > 0) {
-      tableData.value = formatHistoryData(historyData);
-      recognitionData.value = historyData.map((item: any) => ({
-        '食物': item.food_name,
-        '烹飪方式': item.cooking_method,
-        '數量': String(item.quantity),
-        '單位': item.quantity_name,
-        '熱量': String(item.calories),
-        '蛋白質': String(item.protein),
-        '脂質': String(item.lipids),
-        '碳水化合物': String(item.carbohydrate),
-      }));
-    } else {
-      tableData.value = [createEmptyItem()];
-      recognitionData.value = [createEmptyItem()];
-    }
-  } catch (error) {
-    console.error('Error updating recognition data:', error);
-  }
-}
-
 
 
 function validateLabelData(labelData: any[]): { isValid: boolean, errors: string[] } {

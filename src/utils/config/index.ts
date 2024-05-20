@@ -9,7 +9,7 @@ export const airesultsHeaders = ref([
   '熱量',
   '蛋白質',
   '脂質',
-  '碳水碳水化合物',
+  '碳水化合物',
 ])
 
 export const tableHeaders = ref([
