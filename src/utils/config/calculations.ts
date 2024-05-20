@@ -147,3 +147,25 @@ export function getTotalLipids(item: HistoryItem) {
 export function getTotalCarbohydrates(item: HistoryItem) {
   return item.ai_list.reduce((sum, ai) => sum + ai.carbohydrate, 0);
 }
+
+
+
+export function calculateTotalQuantity(items: TableItem[]): number {
+  return items.reduce((sum, item) => sum + (parseFloat(item['數量']) || 0), 0);
+}
+
+export function calculateTotalCarbohydrate(items: TableItem[], tableResluts: string[]): number {
+  return tableResluts.reduce((sum, result) => sum + calculateResults(result, items).carbohydrate, 0);
+}
+
+export function calculateTotalProtein(items: TableItem[], tableResluts: string[]): number {
+  return tableResluts.reduce((sum, result) => sum + calculateResults(result, items).protein, 0);
+}
+
+export function calculateTotalLipids(items: TableItem[], tableResluts: string[]): number {
+  return tableResluts.reduce((sum, result) => sum + calculateResults(result, items).lipids, 0);
+}
+
+export function calculateTotalEnergy(items: TableItem[], tableResluts: string[]): number {
+  return tableResluts.reduce((sum, result) => sum + calculateResults(result, items).total, 0);
+}

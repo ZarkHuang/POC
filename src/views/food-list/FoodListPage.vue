@@ -78,36 +78,45 @@
           </div>
 
           <div class="form-content">
-              <div class="form-header">
-                <PageTitle>計算結果</PageTitle>
-              </div>
-              <NTable :bordered="false" :single-line="false">
-                <thead>
-                  <tr>
-                    <th>成分</th>
-                    <th>份數</th>
-                    <th>碳水化合物</th>
-                    <th>蛋白質</th>
-                    <th>脂肪</th>
-                    <th>小計</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(result, index) in tableResluts" :key="index">
-                    <td>{{ result }}</td>
-                    <td>{{ calculateResults(result, tableData).quantity }}</td>
+            <div class="form-header">
+              <PageTitle>計算結果</PageTitle>
+            </div>
+            <NTable :bordered="false" :single-line="false">
+              <thead>
+                <tr>
+                  <th>成分</th>
+                  <th>份數</th>
+                  <th>碳水化合物</th>
+                  <th>蛋白質</th>
+                  <th>脂肪</th>
+                  <th>熱量小計</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(result, index) in tableResluts" :key="index">
+                  <td>{{ result }}</td>
+                  <td>{{ calculateResults(result, tableData).quantity }}</td>
                   <td>{{ calculateResults(result, tableData).carbohydrate }}</td>
                   <td>{{ calculateResults(result, tableData).protein }}</td>
                   <td>{{ calculateResults(result, tableData).lipids }}</td>
                   <td>{{ calculateResults(result, tableData).total }}</td>
-                  </tr>
-                </tbody>
-              </NTable>
-            </div>
+                </tr>
+                <tr>
+                  <td>熱量總計</td>
+                  <td>{{ calculateTotalQuantity(tableData) }}</td>
+                  <td>{{ calculateTotalCarbohydrate(tableData, tableResluts) }}</td>
+                  <td>{{ calculateTotalProtein(tableData, tableResluts) }}</td>
+                  <td>{{ calculateTotalLipids(tableData, tableResluts) }}</td>
+                  <td>{{ calculateTotalEnergy(tableData, tableResluts) }}</td>
+                </tr>
+              </tbody>
+            </NTable>
+          </div>
         </NScrollbar>
       </NGi>
     </NGrid>
-    <HistoryDrawer v-model:show="drawerVisible" :historyData="historyData" @selectHistoryItem="handleHistoryItemSelect"/>
+    <HistoryDrawer v-model:show="drawerVisible" :historyData="historyData"
+      @selectHistoryItem="handleHistoryItemSelect" />
     <Button @click="toggleDrawer" class="history-button" type="primary">
       <NIcon size="20" :component="ChevronLeft" />
     </Button>
@@ -118,7 +127,7 @@
 import { ref, onMounted, Ref } from 'vue';
 import { NInput, NButton, NGrid, NGi, NScrollbar, useDialog } from 'naive-ui';
 import { ChevronLeft } from '@vicons/carbon'
-import { Image , TableItem } from '@/types/index.ts';
+import { Image, TableItem } from '@/types/index.ts';
 import ImageSelector from '@/views/food-list/ImageSelector.vue';
 import ImageCarousel from '@/views/food-list/ImageCarousel.vue';
 import RecognitionResultTable from '@/views/food-list/RecognitionResultTable.vue';
@@ -127,7 +136,7 @@ import { fetchUserImages, fetchImageLabelHistory, submitImageLabels, fetchHistor
 import { useAuthStore } from '@/stores/authStore';
 import { useMessage } from 'naive-ui';
 import { tableHeaders, tableResluts } from '@/utils/config/index.ts';
-import { createEmptyItem, calculateResults } from '@/utils/config/calculations.ts';
+import { createEmptyItem, calculateResults, calculateTotalQuantity, calculateTotalCarbohydrate, calculateTotalProtein, calculateTotalLipids, calculateTotalEnergy } from '@/utils/config/calculations.ts';
 
 const images: Ref<Image[]> = ref([]);
 const authStore = useAuthStore();
@@ -441,7 +450,7 @@ function validateLabelData(labelData: any[]): { isValid: boolean, errors: string
   const errors: string[] = [];
 
   // 過濾掉空行
-  const nonEmptyData = labelData.filter(item => 
+  const nonEmptyData = labelData.filter(item =>
     item.food_name || item.cooking_method || item.quantity || item.calories || item.protein || item.lipids || item.carbohydrate || item.quantity_name
   );
 
@@ -519,7 +528,7 @@ function toggleDrawer() {
       historyData.value = response;
     }).catch(error => {
       console.error('Error fetching history data:', error);
-    }); 
+    });
   }
 }
 </script>
