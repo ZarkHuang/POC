@@ -425,8 +425,10 @@ async function submitForm(image: Image) {
     if (imageIndex !== -1) {
       images.value[imageIndex].is_label = true;
     }
-    // 這裡刪除fetchLabelHistoryForSelectedImage()，以避免重置tableData
+    // 這裡再調用fetchHistoryData來獲取最新的數據
+    await fetchHistoryData();
     message.success('資料提交成功');
+    await updateRecognitionData(image.image_id);
   } catch (error) {
     console.error('提交失敗:', error);
     message.error('提交失敗');
@@ -434,6 +436,31 @@ async function submitForm(image: Image) {
     isSubmitting.value = false;
   }
 }
+
+async function updateRecognitionData(imageId: string) {
+  try {
+    const historyData = await fetchImageLabelHistory(imageId);
+    if (historyData && historyData.length > 0) {
+      tableData.value = formatHistoryData(historyData);
+      recognitionData.value = historyData.map((item: any) => ({
+        '食物': item.food_name,
+        '烹飪方式': item.cooking_method,
+        '數量': String(item.quantity),
+        '單位': item.quantity_name,
+        '熱量': String(item.calories),
+        '蛋白質': String(item.protein),
+        '脂質': String(item.lipids),
+        '碳水化合物': String(item.carbohydrate),
+      }));
+    } else {
+      tableData.value = [createEmptyItem()];
+      recognitionData.value = [createEmptyItem()];
+    }
+  } catch (error) {
+    console.error('Error updating recognition data:', error);
+  }
+}
+
 
 
 function validateLabelData(labelData: any[]): { isValid: boolean, errors: string[] } {
